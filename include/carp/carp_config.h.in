@@ -1,0 +1,28 @@
+/*
+ * Copyright (c) 2019 Carnegie Mellon University,
+ * Copyright (c) 2019 Triad National Security, LLC, as operator of
+ *     Los Alamos National Laboratory.
+ *
+ * All rights reserved.
+
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file. See the AUTHORS file for names of contributors.
+ */
+
+/*
+ * CARP_config.h.in  configuration and options from the build system
+ * 01-Feb-2021  ankushj@andrew.cmu.edu
+ * 15-Sep-2016  chuck@ece.cmu.edu
+ */
+
+#ifndef CARP_CARP_CONFIG_H
+#define CARP_CARP_CONFIG_H 1
+
+#cmakedefine CARP_MPI
+
+#define CARP_VERSION_MAJOR @CARP_VERSION_MAJOR@
+#define CARP_VERSION_MINOR @CARP_VERSION_MINOR@
+#define CARP_VERSION_PATCH @CARP_VERSION_PATCH@
+#define CARP_VERSION "@CARP_VERSION@"
+
+#endif /* CARP_CARP_CONFIG_H */
