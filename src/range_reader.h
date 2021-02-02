@@ -9,9 +9,13 @@
 #include "common.h"
 #include "file_cache.h"
 #include "perf.h"
+#include "tbb_check.h"
 
 #include "pdlfs-common/env.h"
 
+#if defined(PDLFS_TBB)
+#include <execution>
+#endif
 #include <map>
 
 namespace pdlfs {
@@ -96,8 +100,13 @@ class RangeReader {
     logger_.RegisterEnd("SSTREAD");
 
     logger_.RegisterBegin("SORT");
+#if defined(PDLFS_TBB)
+    std::sort(std::execution::par, query_results_.begin(), query_results_.end(),
+              KeyPairComparator());
+#else
     std::sort(query_results_.begin(), query_results_.end(),
               KeyPairComparator());
+#endif
     logger_.RegisterEnd("SORT");
 
     logf(LOG_INFO, "Query Results: %zu elements found\n",
