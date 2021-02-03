@@ -36,13 +36,20 @@ target_include_directories(carp PUBLIC $<INSTALL_INTERFACE:include>)
 target_include_directories(carp BEFORE PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../../include>)
-target_link_libraries(carp pdlfs-common)
+target_link_libraries(carp PUBLIC pdlfs-common)
+
+if (PDLFS_TBB)
+  find_package(TBB REQUIRED)
+  message(STATUS "TBB optimizations will be enabled only if compiler suports them")
+  target_link_libraries(carp PUBLIC TBB::tbb)
+endif()
+
 if (THREADS_HAVE_PTHREAD_ARG)
     target_compile_options(carp PUBLIC "-pthread")
 endif ()
 
 if (CMAKE_THREAD_LIBS_INIT)
-    target_link_libraries(carp "${CMAKE_THREAD_LIBS_INIT}")
+  target_link_libraries(carp PUBLIC "${CMAKE_THREAD_LIBS_INIT}")
 endif ()
 set_target_properties(carp PROPERTIES VERSION ${CARP_VERSION}
         SOVERSION ${CARP_VERSION_MAJOR})

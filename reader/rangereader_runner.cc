@@ -21,14 +21,23 @@
 #define OVERRIDE
 #endif
 
+#ifdef PDLFS_TBB
+#define TBB_PROMPT "TBB enabled. Additional optimizations may be used."
+#else
+#define TBB_PROMPT "TBB disabled. Additional optimizations unavailable."
+#endif
+
 namespace pdlfs {
 namespace plfsio {
-void gen() {}
+void feature_prompt() {
+  logf(LOG_INFO, TBB_PROMPT);
+}
+
 void test(float qbeg, float qend) {
   RdbOptions options;
   RandomAccessFile* src;
   Env* env = port::PosixGetDefaultEnv();
-  const char* dpath = "/Users/schwifty/Repos/workloads/rdb/tables";
+  const char* dpath = "/panfs/probescratch/TableFS/test-aj-512/out/particle";
   options.env = env;
   RangeReader rr(options);
   rr.Read(dpath);
@@ -42,5 +51,6 @@ int main(int argc, char* argv[]) {
   float qbeg = std::stof(argv[1]);
   float qend = std::stof(argv[2]);
   printf("Query: %.3f %.3f\n", qbeg, qend);
+  pdlfs::plfsio::feature_prompt();
   pdlfs::plfsio::test(qbeg, qend);
 }
