@@ -41,8 +41,8 @@ void PartitionManifestReader::ReadFooterEpoch(int epoch, int rank, Slice& data,
     item.part_item_count = DecodeFixed32(&data[cur_offset + offsets[4]]);
     item.part_item_oob = DecodeFixed32(&data[cur_offset + offsets[5]]);
 
-    printf("%llu %.3f %.3f %u %u\n", item.offset, item.part_range_begin,
-           item.part_range_end, item.part_item_count, item.part_item_oob);
+    // printf("%lu %.3f %.3f %u %u\n", item.offset, item.part_range_begin,
+           // item.part_range_end, item.part_item_count, item.part_item_oob);
 
     items_.push_back(item);
 
@@ -60,7 +60,7 @@ Status PartitionManifestReader::ReadManifest(int rank, Slice& footer_data,
     uint32_t num_ep_written = DecodeFixed32(&footer_data[epoch_offset]);
     uint64_t off_prev =
         DecodeFixed64(&footer_data[epoch_offset + sizeof(uint32_t)]);
-    printf("%u %llu\n", num_ep_written, off_prev);
+    // printf("%u %lu\n", num_ep_written, off_prev);
 
     ReadFooterEpoch(num_ep_written, rank, footer_data, epoch_offset + 12,
                     off_prev);
@@ -136,8 +136,8 @@ Status RangeReader::ReadFooter(RandomAccessFile* fh, uint64_t fsz,
   pf.key_sz = DecodeFixed64(&s[12]);
   pf.val_sz = DecodeFixed64(&s[20]);
 
-  logf(LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs, pf.manifest_sz,
-       pf.key_sz, pf.val_sz);
+  // logf(LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs, pf.manifest_sz,
+       // pf.key_sz, pf.val_sz);
 
   scratch.resize(pf.manifest_sz);
   status = fh->Read(fsz - pf.manifest_sz - footer_sz, pf.manifest_sz,

@@ -92,7 +92,7 @@ class RangeReader {
     std::string scratch;
     for (uint32_t i = 0; i < match_obj.items.size(); i++) {
       PartitionManifestItem& item = match_obj.items[i];
-      logf(LOG_DBUG, "Item Rank: %d, Offset: %llu\n", item.rank, item.offset);
+      // logf(LOG_DBUG, "Item Rank: %d, Offset: %llu\n", item.rank, item.offset);
       ReadBlock(item.rank, item.offset, item.part_item_count * 60, slice,
                 scratch);
     }
