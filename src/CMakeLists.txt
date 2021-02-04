@@ -1,4 +1,4 @@
-set(carp-io-srcs common.cc range_reader.cc file_cache.cc)
+set(carp-io-srcs common.cc range_reader.cc file_cache.cc manifest_reader.cc)
 
 # configure/load in standard modules we plan to use
 include(CMakePackageConfigHelpers)
@@ -29,7 +29,7 @@ set(CARP_VERSION "${carp-vers}.${CARP_VERSION_PATCH}")
 configure_file("../include/carp/carp_config.h.in"
         "../include/carp/carp_config.h" @ONLY)
 
-set(carp-all-srcs ${carp-io-srcs})
+set(carp-all-srcs ${carp-io-srcs} manifest_reader.h manifest.cc task_completion_tracker.h)
 
 add_library(carp ${carp-all-srcs})
 target_include_directories(carp PUBLIC $<INSTALL_INTERFACE:include>)

@@ -37,11 +37,13 @@ void test(float qbeg, float qend) {
   RdbOptions options;
   RandomAccessFile* src;
   Env* env = port::PosixGetDefaultEnv();
-  const char* dpath = "/panfs/probescratch/TableFS/test-aj-512/out/particle";
+//  const char* dpath = "/panfs/probescratch/TableFS/test-aj-512/out/particle";
+  const char* dpath = "/Users/schwifty/Repos/workloads/rdb/tables";
   options.env = env;
+  options.parallelism = 16;
   RangeReader rr(options);
-  rr.Read(dpath);
-  rr.Query(0, qbeg, qend);
+  rr.ReadManifest(dpath);
+  rr.QueryParallel(0, qbeg, qend);
 }
 }  // namespace plfsio
 }  // namespace pdlfs
