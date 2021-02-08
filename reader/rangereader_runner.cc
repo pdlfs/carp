@@ -37,6 +37,7 @@ void test(float qbeg, float qend) {
   RdbOptions options;
   RandomAccessFile* src;
   Env* env = port::PosixGetDefaultEnv();
+//  Env* env = port::PosixGetUnBufferedIOEnv();
 //  const char* dpath = "/panfs/probescratch/TableFS/test-aj-512/out/particle";
   const char* dpath = "/Users/schwifty/Repos/workloads/rdb/tables";
   options.env = env;

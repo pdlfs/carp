@@ -114,11 +114,12 @@ void RangeReader::ManifestReadWorker(void* arg) {
 
   ParsedFooter pf;
 
-  item->fdcache->GetFileHandle(item->rank, &src, &src_sz);
-  RangeReader::ReadFooter(src, src_sz, pf);
+//  item->fdcache->GetFileHandle(item->rank, &src, &src_sz);
+//  RangeReader::ReadFooter(src, src_sz, pf);
+  item->fdcache->ReadFooter(item->rank, pf);
   item->manifest_reader->UpdateKVSizes(pf.key_sz, pf.val_sz);
-  item->manifest_reader->ReadManifest(item->rank, pf.manifest_data,
-                                      pf.manifest_sz);
+//  item->manifest_reader->ReadManifest(item->rank, pf.manifest_data,
+//                                      pf.manifest_sz);
   item->task_tracker->MarkCompleted();
 }
 
@@ -135,8 +136,10 @@ Status RangeReader::ReadFooter(RandomAccessFile* fh, uint64_t fsz,
   pf.key_sz = DecodeFixed64(&s[12]);
   pf.val_sz = DecodeFixed64(&s[20]);
 
-  // logf(LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs,
-  // pf.manifest_sz, pf.key_sz, pf.val_sz);
+   logf(LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs,
+   pf.manifest_sz, pf.key_sz, pf.val_sz);
+
+
 
   scratch.resize(pf.manifest_sz);
   status = fh->Read(fsz - pf.manifest_sz - footer_sz, pf.manifest_sz,

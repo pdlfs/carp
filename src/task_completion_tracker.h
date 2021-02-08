@@ -23,7 +23,7 @@ class TaskCompletionTracker {
     mutex_.Lock();
     while (tasks_completed_ < target) {
       cv_.TimedWait(1e3);
-      logf(LOG_INFO, "Waiting... \n");
+//      logf(LOG_INFO, "Waiting... \n");
     }
     mutex_.Unlock();
   }

@@ -29,6 +29,7 @@ struct KeyPair {
 
 struct ParsedFooter {
   Slice manifest_data;
+  std::string scratch;
   uint32_t num_epochs;
   uint64_t manifest_sz;
   uint64_t key_sz;
@@ -37,7 +38,7 @@ struct ParsedFooter {
 
 struct ManifestReadWorkItem {
   int rank;
-  CachingDirReader* fdcache;
+  CachingDirReader<RandomAccessFile>* fdcache;
   TaskCompletionTracker* task_tracker;
   PartitionManifestReader* manifest_reader;
 };
@@ -50,7 +51,7 @@ struct SSTReadWorkItem {
   std::vector<KeyPair>* query_results;
   uint64_t qrvec_offset;
 
-  CachingDirReader* fdcache;
+  CachingDirReader<RandomAccessFile>* fdcache;
   TaskCompletionTracker* task_tracker;
 };
 
@@ -113,7 +114,7 @@ class RangeReader {
 
   const RdbOptions& options_;
   std::string dir_path_;
-  CachingDirReader fdcache_;
+  CachingDirReader<RandomAccessFile> fdcache_;
   PartitionManifest manifest_;
   PartitionManifestReader manifest_reader_;
   int num_ranks_;
