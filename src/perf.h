@@ -3,6 +3,9 @@
 //
 
 #pragma once
+
+#include <map>
+
 namespace pdlfs {
 namespace plfsio {
 class RangeReaderPerfLogger {
