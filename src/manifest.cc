@@ -32,8 +32,11 @@ int PartitionManifest::GetOverLappingEntries(int epoch, float range_begin,
     }
   }
 
-  logf(LOG_INFO, "Query Selectivity: %.4f %%\n",
-       match.TotalMass() * 1.0 / mass_total_);
+  uint64_t mass_epoch = mass_epoch_[epoch];
+  uint64_t mass_match = match.TotalMass();
+
+  logf(LOG_INFO, "Query Selectivity: %.4f %% (%lu items, %lu total)\n",
+      mass_match * 100.0 / mass_epoch, mass_match, mass_epoch);
 
   assert(sizes_set_);
   match.SetKVSizes(key_sz_, val_sz_);

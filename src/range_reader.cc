@@ -64,8 +64,8 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
   logf(LOG_INFO, "Query Results: %zu elements found\n", query_results.size());
 
 #define ITEM(idx) query_results[(idx)].key
-  //  logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f...\n", ITEM(5000),
-  //       ITEM(6500), ITEM(8000));
+   logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f...\n", ITEM(5000),
+        ITEM(6500), ITEM(8000));
   logger_.PrintStats();
 
   return Status::OK();
@@ -201,6 +201,8 @@ Status RangeReader::RankwiseReadSSTs(PartitionManifestMatch& match,
   work_items.resize(ranks.size());
   query_results.resize(match.TotalMass());
 
+  logf(LOG_INFO, "Matching ranks: %zu\n", ranks.size());
+
   for (uint32_t i = 0; i < ranks.size(); i++) {
     int rank = ranks[i];
     work_items[i].rank = rank;
@@ -288,8 +290,6 @@ void RangeReader::RankwiseSSTReadWorker(void* arg) {
   std::vector<std::string> scratch_vec;
   scratch_vec.resize(wi->wi_vec.size());
 
-  printf("---> %d\n", rank);
-
   for (size_t i = 0; i < req_vec.size(); i++) {
     ReadRequest& req = req_vec[i];
     PartitionManifestItem& item = wi->wi_vec[i];
@@ -307,11 +307,9 @@ void RangeReader::RankwiseSSTReadWorker(void* arg) {
     return;
   }
 
-  printf("---> %d\n", rank);
-
   // XXX: don't reuse req_vec, or create copy above
   for (size_t i = 0; i < req_vec.size(); i++) {
-    printf("===> %lu\n", req_vec[i].offset);
+    // printf("===> %d %lu\n", rank, req_vec[i].offset);
     Slice slice = req_vec[i].slice;
     uint64_t block_offset = 0;
     while (block_offset < req_vec[i].bytes) {

@@ -33,15 +33,15 @@ void feature_prompt() {
   logf(LOG_INFO, TBB_PROMPT);
 }
 
-void test(float qbeg, float qend) {
+void test(float qbeg, float qend, int par = 8) {
   RdbOptions options;
   RandomAccessFile* src;
   Env* env = port::PosixGetDefaultEnv();
 //  Env* env = port::PosixGetUnBufferedIOEnv();
-//  const char* dpath = "/panfs/probescratch/TableFS/test-aj-512/out/particle";
-  const char* dpath = "/Users/schwifty/Repos/workloads/rdb/tables";
+ const char* dpath = "/panfs/probescratch/TableFS/test-aj-512/out/particle";
+  // const char* dpath = "/Users/schwifty/Repos/workloads/rdb/tables";
   options.env = env;
-  options.parallelism = 3;
+  options.parallelism = par;
   RangeReader rr(options);
   rr.ReadManifest(dpath);
   rr.QueryParallel(0, qbeg, qend);
@@ -50,10 +50,10 @@ void test(float qbeg, float qend) {
 }  // namespace pdlfs
 
 int main(int argc, char* argv[]) {
-  printf("Hello World!\n");
   float qbeg = std::stof(argv[1]);
   float qend = std::stof(argv[2]);
-  printf("Query: %.3f %.3f\n", qbeg, qend);
+  int par = std::stoi(argv[3]);
+  printf("Query: %.3f %.3f (par: %d)\n", qbeg, qend, par);
   pdlfs::plfsio::feature_prompt();
-  pdlfs::plfsio::test(qbeg, qend);
+  pdlfs::plfsio::test(qbeg, qend, par);
 }

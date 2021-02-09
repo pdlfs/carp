@@ -45,9 +45,9 @@ class CachingDirReader {
 
   Status ReadDirectory(std::string dir, int& num_ranks);
 
-#define MB(n) (n##u) << 10
+#define KB(n) (n##u) << 10
   Status ReadFooter(int rank, ParsedFooter& parsed_footer,
-                    uint64_t opt_rdsz = MB(4));
+                    uint64_t opt_rdsz = KB(4));
 
   Status Read(int rank, ReadRequest& request, bool force_reopen = true);
 

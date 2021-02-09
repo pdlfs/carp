@@ -121,6 +121,12 @@ class PartitionManifest {
   void AddItem(PartitionManifestItem& item) {
     items_.push_back(item);
     mass_total_ += item.part_item_count;
+
+    if (item.epoch >= (int) mass_epoch_.size()) {
+      mass_epoch_.resize(item.epoch + 1, 0);
+    }
+
+    mass_epoch_[item.epoch] += item.part_item_count;
   }
 
   Status UpdateKVSizes(const uint64_t key_sz, const uint64_t val_sz) {
@@ -139,6 +145,7 @@ class PartitionManifest {
 
   std::vector<PartitionManifestItem> items_;
   uint64_t mass_total_;
+  std::vector<uint64_t> mass_epoch_;
   bool sizes_set_;
   uint64_t key_sz_;
   uint64_t val_sz_;
