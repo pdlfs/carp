@@ -170,6 +170,8 @@ Status CachingDirReader<T>::GetFileHandle(int rank, T** fh, uint64_t* fsz,
 
   if (to_open) {
     s = OpenFileHandle(rank, fh, fsz);
+    cache_[rank].fh = *fh;
+    cache_[rank].fsz = *fsz;
   } else {
     *fh = cache_[rank].fh;
     *fsz = cache_[rank].fsz;

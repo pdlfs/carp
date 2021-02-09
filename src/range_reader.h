@@ -24,7 +24,8 @@ namespace pdlfs {
 namespace plfsio {
 struct KeyPair {
   float key;
-  std::string value;
+//  std::string value;
+  int value;
 };
 
 struct ParsedFooter {

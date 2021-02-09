@@ -41,7 +41,7 @@ void test(float qbeg, float qend) {
 //  const char* dpath = "/panfs/probescratch/TableFS/test-aj-512/out/particle";
   const char* dpath = "/Users/schwifty/Repos/workloads/rdb/tables";
   options.env = env;
-  options.parallelism = 16;
+  options.parallelism = 3;
   RangeReader rr(options);
   rr.ReadManifest(dpath);
   rr.QueryParallel(0, qbeg, qend);

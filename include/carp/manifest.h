@@ -42,7 +42,7 @@ class PartitionManifestMatch {
     mass_oob_ += item.part_item_oob;
   }
 
-  void GetUniqueRanks(std::vector<int> ranks) {
+  void GetUniqueRanks(std::vector<int>& ranks) {
     std::map<int, std::vector<size_t> >::const_iterator it = ranks_.cbegin();
     for (; it != ranks_.cend(); it++) {
       ranks.push_back(it->first);
@@ -50,7 +50,7 @@ class PartitionManifestMatch {
   }
 
   uint64_t GetMatchesByRank(int rank,
-                        std::vector<PartitionManifestItem> rank_tables) {
+                        std::vector<PartitionManifestItem>& rank_tables) {
     std::vector<size_t>& rank_items = ranks_[rank];
     uint64_t mass_rank = 0;
 

@@ -44,11 +44,11 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
   PartitionManifestMatch match_obj;
   manifest_.GetOverLappingEntries(epoch, rbegin, rend, match_obj);
 
-  logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)",
-       match_obj.Size(), match_obj.TotalMass());
+  logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
+       match_obj.TotalMass());
 
   std::vector<KeyPair> query_results;
-  ReadSSTs(match_obj, query_results);
+  RankwiseReadSSTs(match_obj, query_results);
 
   logger_.RegisterEnd("SSTREAD");
   logger_.RegisterBegin("SORT");
@@ -75,8 +75,8 @@ Status RangeReader::Query(int epoch, float rbegin, float rend) {
 
   PartitionManifestMatch match_obj;
   manifest_.GetOverLappingEntries(epoch, rbegin, rend, match_obj);
-  logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)",
-       match_obj.Size(), match_obj.TotalMass());
+  logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
+       match_obj.TotalMass());
 
   Slice slice;
   std::string scratch;
@@ -118,8 +118,8 @@ void RangeReader::ManifestReadWorker(void* arg) {
   //  RangeReader::ReadFooter(src, src_sz, pf);
   item->fdcache->ReadFooter(item->rank, pf);
   item->manifest_reader->UpdateKVSizes(pf.key_sz, pf.val_sz);
-  //  item->manifest_reader->ReadManifest(item->rank, pf.manifest_data,
-  //                                      pf.manifest_sz);
+  item->manifest_reader->ReadManifest(item->rank, pf.manifest_data,
+                                      pf.manifest_sz);
   item->task_tracker->MarkCompleted();
 }
 
@@ -259,7 +259,7 @@ void RangeReader::SSTReadWorker(void* arg) {
   uint64_t block_offset = 0;
   while (block_offset < sst_sz) {
     qvec[qidx].key = DecodeFloat32(&slice[block_offset]);
-    qvec[qidx].value = std::string(&slice[block_offset + key_sz], val_sz);
+//    qvec[qidx].value = std::string(&slice[block_offset + key_sz], val_sz);
     //    kp.value = "";
 
     block_offset += item_sz;
@@ -285,35 +285,43 @@ void RangeReader::RankwiseSSTReadWorker(void* arg) {
   std::vector<ReadRequest> req_vec;
   req_vec.resize(wi->wi_vec.size());
 
-  std::vector<std::string>scratch_vec;
+  std::vector<std::string> scratch_vec;
   scratch_vec.resize(wi->wi_vec.size());
 
-  for (size_t i = 0; i < req_vec.size(); i++){
+  printf("---> %d\n", rank);
+
+  for (size_t i = 0; i < req_vec.size(); i++) {
     ReadRequest& req = req_vec[i];
     PartitionManifestItem& item = wi->wi_vec[i];
     req.offset = item.offset;
     req.bytes = kvp_sz * item.part_item_count;
-    req.scratch = &scratch_vec[i][0];
+    scratch_vec[i].resize(req.bytes);
+    req.scratch = &(scratch_vec[i][0]);
   }
 
+  uint64_t bytestmp = req_vec[0].bytes;
   s = wi->fdcache->ReadBatch(rank, req_vec);
+  assert(bytestmp == req_vec[0].bytes);
   if (!s.ok()) {
     logf(LOG_ERRO, "Read Failure");
     return;
   }
 
+  printf("---> %d\n", rank);
+
+  // XXX: don't reuse req_vec, or create copy above
   for (size_t i = 0; i < req_vec.size(); i++) {
+    printf("===> %lu\n", req_vec[i].offset);
     Slice slice = req_vec[i].slice;
     uint64_t block_offset = 0;
     while (block_offset < req_vec[i].bytes) {
       qvec[qidx].key = DecodeFloat32(&slice[block_offset]);
-      qvec[qidx].value = std::string(&slice[block_offset + key_sz], val_sz);
+//      qvec[qidx].value = std::string(&slice[block_offset + key_sz], val_sz);
       //    kp.value = "";
 
       block_offset += kvp_sz;
       qidx++;
     }
-
   }
 
   wi->task_tracker->MarkCompleted();
@@ -344,7 +352,7 @@ void RangeReader::ReadBlock(int rank, uint64_t offset, uint64_t size,
     KeyPair kp;
     kp.key = DecodeFloat32(&slice[block_offset]);
     //            kp.value = std::string(&slice[block_offset + 4], 56);
-    kp.value = "";
+//    kp.value = "";
     query_results_.push_back(kp);
 
     block_offset += 60;
