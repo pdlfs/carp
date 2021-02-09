@@ -7,7 +7,7 @@
 namespace pdlfs {
 namespace plfsio {
 
-Status RangeReader::ReadManifest(std::string dir_path) {
+Status RangeReader::ReadManifest(const std::string& dir_path) {
   logger_.RegisterBegin("MFREAD");
 
   dir_path_ = dir_path;
@@ -45,7 +45,7 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
   manifest_.GetOverLappingEntries(epoch, rbegin, rend, match_obj);
 
   logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)",
-       match_obj.items.size(), match_obj.mass_total);
+       match_obj.Size(), match_obj.TotalMass());
 
   std::vector<KeyPair> query_results;
   ReadSSTs(match_obj, query_results);
@@ -64,8 +64,8 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
   logf(LOG_INFO, "Query Results: %zu elements found\n", query_results.size());
 
 #define ITEM(idx) query_results[(idx)].key
-  logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f...\n", ITEM(5000),
-       ITEM(6500), ITEM(8000));
+  //  logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f...\n", ITEM(5000),
+  //       ITEM(6500), ITEM(8000));
   logger_.PrintStats();
 
   return Status::OK();
@@ -76,12 +76,12 @@ Status RangeReader::Query(int epoch, float rbegin, float rend) {
   PartitionManifestMatch match_obj;
   manifest_.GetOverLappingEntries(epoch, rbegin, rend, match_obj);
   logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)",
-       match_obj.items.size(), match_obj.mass_total);
+       match_obj.Size(), match_obj.TotalMass());
 
   Slice slice;
   std::string scratch;
-  for (uint32_t i = 0; i < match_obj.items.size(); i++) {
-    PartitionManifestItem& item = match_obj.items[i];
+  for (uint32_t i = 0; i < match_obj.Size(); i++) {
+    PartitionManifestItem& item = match_obj[i];
     // logf(LOG_DBUG, "Item Rank: %d, Offset: %llu\n", item.rank,
     // item.offset);
     ReadBlock(item.rank, item.offset, item.part_item_count * 60, slice,
@@ -114,12 +114,12 @@ void RangeReader::ManifestReadWorker(void* arg) {
 
   ParsedFooter pf;
 
-//  item->fdcache->GetFileHandle(item->rank, &src, &src_sz);
-//  RangeReader::ReadFooter(src, src_sz, pf);
+  //  item->fdcache->GetFileHandle(item->rank, &src, &src_sz);
+  //  RangeReader::ReadFooter(src, src_sz, pf);
   item->fdcache->ReadFooter(item->rank, pf);
   item->manifest_reader->UpdateKVSizes(pf.key_sz, pf.val_sz);
-//  item->manifest_reader->ReadManifest(item->rank, pf.manifest_data,
-//                                      pf.manifest_sz);
+  //  item->manifest_reader->ReadManifest(item->rank, pf.manifest_data,
+  //                                      pf.manifest_sz);
   item->task_tracker->MarkCompleted();
 }
 
@@ -136,10 +136,8 @@ Status RangeReader::ReadFooter(RandomAccessFile* fh, uint64_t fsz,
   pf.key_sz = DecodeFixed64(&s[12]);
   pf.val_sz = DecodeFixed64(&s[20]);
 
-   logf(LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs,
-   pf.manifest_sz, pf.key_sz, pf.val_sz);
-
-
+  logf(LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs, pf.manifest_sz,
+       pf.key_sz, pf.val_sz);
 
   scratch.resize(pf.manifest_sz);
   status = fh->Read(fsz - pf.manifest_sz - footer_sz, pf.manifest_sz,
@@ -154,17 +152,19 @@ Status RangeReader::ReadSSTs(PartitionManifestMatch& match,
   std::string scratch;
 
   std::vector<SSTReadWorkItem> work_items;
-  work_items.resize(match.items.size());
-  query_results.resize(match.mass_total);
+  work_items.resize(match.Size());
+  query_results.resize(match.TotalMass());
   task_tracker_.Reset();
 
   uint64_t mass_sum = 0;
+  uint64_t key_sz, val_sz;
+  match.GetKVSizes(key_sz, val_sz);
 
-  for (uint32_t i = 0; i < match.items.size(); i++) {
-    PartitionManifestItem& item = match.items[i];
+  for (uint32_t i = 0; i < match.Size(); i++) {
+    PartitionManifestItem& item = match[i];
     work_items[i].item = &item;
-    work_items[i].key_sz = match.key_sz;
-    work_items[i].val_sz = match.val_sz;
+    work_items[i].key_sz = key_sz;
+    work_items[i].val_sz = val_sz;
 
     work_items[i].query_results = &query_results;
     work_items[i].qrvec_offset = mass_sum;
@@ -176,7 +176,49 @@ Status RangeReader::ReadSSTs(PartitionManifestMatch& match,
     thpool_->Schedule(SSTReadWorker, (void*)&work_items[i]);
   }
 
-  assert(mass_sum == match.mass_total);
+  assert(mass_sum == match.TotalMass());
+
+  task_tracker_.WaitUntilCompleted(work_items.size());
+
+  return Status::OK();
+}
+
+Status RangeReader::RankwiseReadSSTs(PartitionManifestMatch& match,
+                                     std::vector<KeyPair>& query_results) {
+  Slice slice;
+  std::string scratch;
+
+  task_tracker_.Reset();
+
+  uint64_t mass_sum = 0;
+  uint64_t key_sz, val_sz;
+  match.GetKVSizes(key_sz, val_sz);
+
+  std::vector<int> ranks;
+  match.GetUniqueRanks(ranks);
+
+  std::vector<RankwiseSSTReadWorkItem> work_items;
+  work_items.resize(ranks.size());
+  query_results.resize(match.TotalMass());
+
+  for (uint32_t i = 0; i < ranks.size(); i++) {
+    int rank = ranks[i];
+    work_items[i].rank = rank;
+    uint64_t mass_rank = match.GetMatchesByRank(rank, work_items[i].wi_vec);
+    work_items[i].key_sz = key_sz;
+    work_items[i].val_sz = val_sz;
+
+    work_items[i].query_results = &query_results;
+    work_items[i].qrvec_offset = mass_sum;
+    mass_sum += mass_rank;
+
+    work_items[i].fdcache = &fdcache_;
+    work_items[i].task_tracker = &task_tracker_;
+
+    thpool_->Schedule(RankwiseSSTReadWorker, (void*)&work_items[i]);
+  }
+
+  assert(mass_sum == match.TotalMass());
 
   task_tracker_.WaitUntilCompleted(work_items.size());
 
@@ -185,13 +227,9 @@ Status RangeReader::ReadSSTs(PartitionManifestMatch& match,
 
 void RangeReader::SSTReadWorker(void* arg) {
   SSTReadWorkItem* wi = static_cast<SSTReadWorkItem*>(arg);
+  Status s = Status::OK();
 
-  int rank;
-  RandomAccessFile* src;
-  uint64_t src_sz;
-
-  Status s = wi->fdcache->GetFileHandle(rank, &src, &src_sz);
-  assert(s.ok());
+  int rank = wi->item->rank;
 
   Slice slice;
   std::string scratch;
@@ -204,7 +242,18 @@ void RangeReader::SSTReadWorker(void* arg) {
   std::vector<KeyPair>& qvec = *wi->query_results;
   int qidx = wi->qrvec_offset;
 
-  src->Read(wi->item->offset, sst_sz, &slice, &scratch[0]);
+  ReadRequest req;
+  req.offset = wi->item->offset;
+  req.bytes = sst_sz;
+  req.scratch = &scratch[0];
+
+  s = wi->fdcache->Read(rank, req, true);
+  if (!s.ok()) {
+    logf(LOG_ERRO, "Read Failure");
+    return;
+  }
+
+  slice = req.slice;
   std::vector<KeyPair> query_results;
 
   uint64_t block_offset = 0;
@@ -218,6 +267,88 @@ void RangeReader::SSTReadWorker(void* arg) {
   }
 
   wi->task_tracker->MarkCompleted();
+}
+
+void RangeReader::RankwiseSSTReadWorker(void* arg) {
+  RankwiseSSTReadWorkItem* wi = static_cast<RankwiseSSTReadWorkItem*>(arg);
+  Status s = Status::OK();
+
+  int rank = wi->rank;
+
+  const size_t key_sz = wi->key_sz;
+  const size_t val_sz = wi->val_sz;
+  const size_t kvp_sz = wi->key_sz + wi->val_sz;
+
+  std::vector<KeyPair>& qvec = *wi->query_results;
+  uint64_t qidx = wi->qrvec_offset;
+
+  std::vector<ReadRequest> req_vec;
+  req_vec.resize(wi->wi_vec.size());
+
+  std::vector<std::string>scratch_vec;
+  scratch_vec.resize(wi->wi_vec.size());
+
+  for (size_t i = 0; i < req_vec.size(); i++){
+    ReadRequest& req = req_vec[i];
+    PartitionManifestItem& item = wi->wi_vec[i];
+    req.offset = item.offset;
+    req.bytes = kvp_sz * item.part_item_count;
+    req.scratch = &scratch_vec[i][0];
+  }
+
+  s = wi->fdcache->ReadBatch(rank, req_vec);
+  if (!s.ok()) {
+    logf(LOG_ERRO, "Read Failure");
+    return;
+  }
+
+  for (size_t i = 0; i < req_vec.size(); i++) {
+    Slice slice = req_vec[i].slice;
+    uint64_t block_offset = 0;
+    while (block_offset < req_vec[i].bytes) {
+      qvec[qidx].key = DecodeFloat32(&slice[block_offset]);
+      qvec[qidx].value = std::string(&slice[block_offset + key_sz], val_sz);
+      //    kp.value = "";
+
+      block_offset += kvp_sz;
+      qidx++;
+    }
+
+  }
+
+  wi->task_tracker->MarkCompleted();
+}
+
+void RangeReader::ReadBlock(int rank, uint64_t offset, uint64_t size,
+                            Slice& slice, std::string& scratch, bool preview) {
+  Status s = Status::OK();
+
+  scratch.resize(size);
+  ReadRequest req;
+  req.offset = offset;
+  req.bytes = size;
+  req.scratch = &scratch[0];
+  s = fdcache_.Read(rank, req);
+  if (!s.ok()) {
+    logf(LOG_ERRO, "Bad Status");
+    return;
+  }
+
+  slice = req.slice;
+
+  uint64_t num_items = size / 60;
+  uint64_t vec_off = query_results_.size();
+
+  uint64_t block_offset = 0;
+  while (block_offset < size) {
+    KeyPair kp;
+    kp.key = DecodeFloat32(&slice[block_offset]);
+    //            kp.value = std::string(&slice[block_offset + 4], 56);
+    kp.value = "";
+    query_results_.push_back(kp);
+
+    block_offset += 60;
+  }
 }
 }  // namespace plfsio
 }  // namespace pdlfs

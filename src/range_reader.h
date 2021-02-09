@@ -38,7 +38,7 @@ struct ParsedFooter {
 
 struct ManifestReadWorkItem {
   int rank;
-  CachingDirReader<RandomAccessFile>* fdcache;
+  CachingDirReader<SequentialFile>* fdcache;
   TaskCompletionTracker* task_tracker;
   PartitionManifestReader* manifest_reader;
 };
@@ -51,7 +51,20 @@ struct SSTReadWorkItem {
   std::vector<KeyPair>* query_results;
   uint64_t qrvec_offset;
 
-  CachingDirReader<RandomAccessFile>* fdcache;
+  CachingDirReader<SequentialFile>* fdcache;
+  TaskCompletionTracker* task_tracker;
+};
+
+struct RankwiseSSTReadWorkItem {
+  std::vector<PartitionManifestItem> wi_vec;
+  int rank;
+  size_t key_sz;
+  size_t val_sz;
+
+  std::vector<KeyPair>* query_results;
+  uint64_t qrvec_offset;
+
+  CachingDirReader<SequentialFile>* fdcache;
   TaskCompletionTracker* task_tracker;
 };
 
@@ -73,7 +86,7 @@ class RangeReader {
     thpool_ = ThreadPool::NewFixed(options.parallelism);
   }
 
-  Status ReadManifest(std::string dir_path);
+  Status ReadManifest(const std::string& dir_path);
 
   Status QueryParallel(int epoch, float rbegin, float rend);
 
@@ -85,36 +98,22 @@ class RangeReader {
   static Status ReadFooter(RandomAccessFile* fh, uint64_t fsz,
                            ParsedFooter& pf);
 
-  Status ReadSSTs(PartitionManifestMatch& match, std::vector<KeyPair>& query_results);
+  Status ReadSSTs(PartitionManifestMatch& match,
+                  std::vector<KeyPair>& query_results);
 
-  static void SSTReadWorker(void * arg);
+  Status RankwiseReadSSTs(PartitionManifestMatch& match,
+                  std::vector<KeyPair>& query_results);
+
+  static void SSTReadWorker(void* arg);
+
+  static void RankwiseSSTReadWorker(void* arg);
 
   void ReadBlock(int rank, uint64_t offset, uint64_t size, Slice& slice,
-                 std::string& scratch, bool preview = true) {
-    scratch.resize(size);
-    RandomAccessFile* src;
-    uint64_t src_sz;
-    fdcache_.GetFileHandle(rank, &src, &src_sz);
-    src->Read(offset, size, &slice, &scratch[0]);
-
-    uint64_t num_items = size / 60;
-    uint64_t vec_off = query_results_.size();
-
-    uint64_t block_offset = 0;
-    while (block_offset < size) {
-      KeyPair kp;
-      kp.key = DecodeFloat32(&slice[block_offset]);
-      //            kp.value = std::string(&slice[block_offset + 4], 56);
-      kp.value = "";
-      query_results_.push_back(kp);
-
-      block_offset += 60;
-    }
-  }
+                 std::string& scratch, bool preview = true);
 
   const RdbOptions& options_;
   std::string dir_path_;
-  CachingDirReader<RandomAccessFile> fdcache_;
+  CachingDirReader<SequentialFile> fdcache_;
   PartitionManifest manifest_;
   PartitionManifestReader manifest_reader_;
   int num_ranks_;

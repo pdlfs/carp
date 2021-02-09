@@ -12,15 +12,12 @@ int PartitionManifest::GetOverLappingEntries(float point,
                                              PartitionManifestMatch& match) {
   for (size_t i = 0; i < items_.size(); i++) {
     if (items_[i].Overlaps(point)) {
-      match.items.push_back(items_[i]);
-      match.mass_total += items_[i].part_item_count;
-      match.mass_oob += items_[i].part_item_oob;
+      match.AddItem(items_[i]);
     }
   }
 
   assert(sizes_set_);
-  match.key_sz = key_sz_;
-  match.val_sz = val_sz_;
+  match.SetKVSizes(key_sz_, val_sz_);
 
   return 0;
 }
@@ -31,18 +28,15 @@ int PartitionManifest::GetOverLappingEntries(int epoch, float range_begin,
   for (size_t i = 0; i < items_.size(); i++) {
     if (items_[i].epoch == epoch &&
         items_[i].Overlaps(range_begin, range_end)) {
-      match.items.push_back(items_[i]);
-      match.mass_total += items_[i].part_item_count;
-      match.mass_oob += items_[i].part_item_oob;
+      match.AddItem(items_[i]);
     }
   }
 
   logf(LOG_INFO, "Query Selectivity: %.4f %%\n",
-       match.mass_total * 1.0 / mass_total_);
+       match.TotalMass() * 1.0 / mass_total_);
 
   assert(sizes_set_);
-  match.key_sz = key_sz_;
-  match.val_sz = val_sz_;
+  match.SetKVSizes(key_sz_, val_sz_);
 
   return 0;
 }

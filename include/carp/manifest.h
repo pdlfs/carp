@@ -6,6 +6,7 @@
 
 #include "pdlfs-common/status.h"
 
+#include <map>
 #include <stdint.h>
 #include <vector>
 
@@ -29,13 +30,66 @@ typedef struct PartitionManifestItem {
   }
 } PartitionManifestItem;
 
-typedef struct PartitionManifestMatch {
-  std::vector<PartitionManifestItem> items;
-  uint64_t mass_total = 0;
-  uint64_t mass_oob = 0;
-  uint64_t key_sz;
-  uint64_t val_sz;
-} PartitionManifestMatch;
+class PartitionManifestMatch {
+ public:
+  PartitionManifestMatch()
+      : mass_total_(0), mass_oob_(0), key_sz_(0), val_sz_(0){};
+
+  void AddItem(PartitionManifestItem& item) {
+    items_.push_back(item);
+    ranks_[item.rank].push_back(items_.size() - 1);
+    mass_total_ += item.part_item_count;
+    mass_oob_ += item.part_item_oob;
+  }
+
+  void GetUniqueRanks(std::vector<int> ranks) {
+    std::map<int, std::vector<size_t> >::const_iterator it = ranks_.cbegin();
+    for (; it != ranks_.cend(); it++) {
+      ranks.push_back(it->first);
+    }
+  }
+
+  uint64_t GetMatchesByRank(int rank,
+                        std::vector<PartitionManifestItem> rank_tables) {
+    std::vector<size_t>& rank_items = ranks_[rank];
+    uint64_t mass_rank = 0;
+
+    for (size_t i = 0; i < rank_items.size(); i++) {
+      size_t it_idx = rank_items[i];
+      PartitionManifestItem& item = items_[it_idx];
+      rank_tables.push_back(item);
+      mass_rank += item.part_item_count;
+    }
+
+    return mass_rank;
+  }
+
+  uint64_t TotalMass() { return mass_total_; }
+
+  void GetKVSizes(uint64_t& key_sz, uint64_t& val_sz) {
+    key_sz = key_sz_;
+    val_sz = val_sz_;
+  }
+
+  uint64_t Size() { return items_.size(); }
+
+  PartitionManifestItem& operator[](size_t i) { return this->items_[i]; }
+
+ private:
+  void SetKVSizes(uint64_t key_sz, uint64_t val_sz) {
+    key_sz_ = key_sz;
+    val_sz_ = val_sz;
+  }
+
+  std::vector<PartitionManifestItem> items_;
+  std::map<int, std::vector<size_t> > ranks_;
+  uint64_t mass_total_;
+  uint64_t mass_oob_;
+  uint64_t key_sz_;
+  uint64_t val_sz_;
+
+  friend class PartitionManifest;
+};
 
 // Public Query interface is thread-safe, write interface is not
 class PartitionManifest {

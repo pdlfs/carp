@@ -263,6 +263,7 @@ Status CachingDirReader<SequentialFile>::ReadBatch(
 }
 
 template class CachingDirReader<RandomAccessFile>;
+template class CachingDirReader<SequentialFile>;
 
 }  // namespace plfsio
 }  // namespace pdlfs

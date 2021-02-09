@@ -49,6 +49,8 @@ class CachingDirReader {
   Status ReadFooter(int rank, ParsedFooter& parsed_footer,
                     uint64_t opt_rdsz = MB(4));
 
+  Status Read(int rank, ReadRequest& request, bool force_reopen = true);
+
   Status ReadBatch(int rank, std::vector<ReadRequest>& requests);
 
  private:
@@ -56,8 +58,6 @@ class CachingDirReader {
   Status GetFileSize(int rank, uint64_t* fsz);
 
   Status OpenFileHandle(int rank, T** fh, uint64_t* fsz);
-
-  Status Read(int rank, ReadRequest& request, bool force_reopen = true);
 
   std::string RdbName(const std::string& parent, int rank) {
     char tmp[20];
