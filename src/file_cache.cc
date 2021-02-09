@@ -18,7 +18,7 @@ Status CachingDirReader<T>::ReadDirectory(std::string dir, int& num_ranks) {
   dir_ = dir;
   uint64_t fsz;
 
-  for (int rank = 0;; rank++) {
+  for (int rank = 0; rank < 2; rank++) {
     std::string fname = RdbName(dir_, rank);
     bool file_exists = env_->FileExists(fname.c_str());
     if (!file_exists) break;
@@ -57,7 +57,8 @@ Status CachingDirReader<T>::ReadFooter(int rank, ParsedFooter& parsed_footer,
   s = Read(rank, req, true);
   if (!s.ok()) return s;
 
-  uint64_t opt_mfsz = opt_rdsz - 28;
+  const uint64_t kFooterSuffixSz = 28;
+  uint64_t opt_mfsz = opt_rdsz - kFooterSuffixSz;
   parsed_footer.num_epochs = DecodeFixed32(&req.slice[opt_mfsz]);
   parsed_footer.manifest_sz = DecodeFixed64(&req.slice[opt_mfsz + 4]);
   parsed_footer.key_sz = DecodeFixed64(&req.slice[opt_mfsz + 12]);
@@ -80,7 +81,7 @@ Status CachingDirReader<T>::ReadFooter(int rank, ParsedFooter& parsed_footer,
   }
 
   parsed_footer.scratch.resize(parsed_footer.manifest_sz);
-  req.offset = fsz - parsed_footer.manifest_sz;
+  req.offset = fsz - parsed_footer.manifest_sz - kFooterSuffixSz;
   req.bytes = parsed_footer.manifest_sz;
   req.scratch = &parsed_footer.scratch[0];
 
