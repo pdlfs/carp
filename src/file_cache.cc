@@ -18,7 +18,7 @@ Status CachingDirReader<T>::ReadDirectory(std::string dir, int& num_ranks) {
   dir_ = dir;
   uint64_t fsz;
 
-  for (int rank = 0; rank < 2; rank++) {
+  for (int rank = 0; ; rank++) {
     std::string fname = RdbName(dir_, rank);
     bool file_exists = env_->FileExists(fname.c_str());
     if (!file_exists) break;

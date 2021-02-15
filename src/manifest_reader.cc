@@ -25,7 +25,8 @@ Status PartitionManifestReader::ReadManifest(int rank, Slice& footer_data,
     uint32_t num_ep_written = DecodeFixed32(&footer_data[epoch_offset]);
     uint64_t off_prev =
         DecodeFixed64(&footer_data[epoch_offset + sizeof(uint32_t)]);
-    logf(LOG_DBUG, "[EPOCH] Index: %u, Offset: %lu\n", num_ep_written, off_prev);
+    logf(LOG_DBUG, "[EPOCH] Index: %u, Offset: %lu\n", num_ep_written,
+         off_prev);
 
     ReadFooterEpoch(num_ep_written, rank, footer_data, epoch_offset + 12,
                     off_prev);
@@ -55,8 +56,9 @@ void PartitionManifestReader::ReadFooterEpoch(int epoch, int rank, Slice& data,
     item.part_item_count = DecodeFixed32(&data[cur_offset + offsets_[4]]);
     item.part_item_oob = DecodeFixed32(&data[cur_offset + offsets_[5]]);
 
-    logf(LOG_DBG2, "[Entry] Offset:%lu RBEG:%.3f RENG:%.3f COUNT:%u OOB:%u\n",
-         item.offset, item.part_range_begin, item.part_range_end,
+    logf(LOG_DBG2,
+         "[Entry E:%d] Offset:%lu RBEG:%.3f RENG:%.3f COUNT:%u OOB:%u\n",
+         item.epoch, item.offset, item.part_range_begin, item.part_range_end,
          item.part_item_count, item.part_item_oob);
 
     // Note to self: if this is a bottleneck,

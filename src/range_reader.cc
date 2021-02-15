@@ -35,6 +35,11 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
 
   logger_.RegisterEnd("MFREAD");
 
+  if (options_.analytics_on) {
+    logf(LOG_INFO, "Running analytics...\n");
+    manifest_.GenOverlapStats(dir_path.c_str(), options_.env);
+  }
+
   return Status::OK();
 }
 
@@ -46,6 +51,8 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
 
   logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
        match_obj.TotalMass());
+
+  match_obj.Print();
 
   std::vector<KeyPair> query_results;
   RankwiseReadSSTs(match_obj, query_results);
@@ -63,9 +70,9 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
 
   logf(LOG_INFO, "Query Results: %zu elements found\n", query_results.size());
 
-#define ITEM(idx) query_results[(idx)].key
-   logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f...\n", ITEM(5000),
-        ITEM(6500), ITEM(8000));
+//#define ITEM(idx) query_results[(idx)].key
+//   logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f...\n", ITEM(5000),
+//        ITEM(6500), ITEM(8000));
   logger_.PrintStats();
 
   return Status::OK();

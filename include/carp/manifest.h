@@ -4,14 +4,52 @@
 
 #pragma once
 
+#include "pdlfs-common/env.h"
 #include "pdlfs-common/status.h"
 
+#include <float.h>
 #include <map>
+#include <sstream>
 #include <stdint.h>
 #include <vector>
 
 namespace pdlfs {
 namespace plfsio {
+struct Range {
+  float range_min, range_max;
+
+  Range() : range_min(FLT_MAX), range_max(FLT_MIN) {}
+
+  Range& operator=(Range& r) {
+    range_min = r.range_min;
+    range_max = r.range_max;
+    return *this;
+  }
+
+  void Reset() {
+    range_min = FLT_MAX;
+    range_max = FLT_MIN;
+  }
+
+  bool Inside(float f) const { return (f >= range_min && f <= range_max); }
+
+  bool IsValid() const {
+    return ((range_min == FLT_MAX && range_max == FLT_MIN) or
+            (range_min < range_max));
+  }
+
+  void Extend(float f) {
+    range_min = std::min(range_min, f);
+    range_max = std::max(range_min, f);
+  }
+
+  void Extend(float beg, float end) {
+    assert(beg < end);
+    range_min = std::min(range_min, beg);
+    range_max = std::max(range_max, end);
+  }
+};
+
 typedef struct PartitionManifestItem {
   int epoch;
   int rank;
@@ -28,6 +66,24 @@ typedef struct PartitionManifestItem {
     return Overlaps(range_begin) or Overlaps(range_end) or
            ((range_begin < part_range_begin) and (range_end > part_range_end));
   }
+
+  bool operator<(const PartitionManifestItem& rhs) const {
+#define PROPLT(x) (x < rhs.x)
+#define PROPEQ(x) (x == rhs.x)
+    return (
+        PROPLT(epoch) || (PROPEQ(epoch) && PROPLT(part_range_begin)) ||
+        (PROPEQ(epoch) && PROPEQ(part_range_begin) && PROPLT(part_range_end)));
+#undef PROPLT
+#undef PROPEQ
+  }
+
+  std::string ToString() {
+    char buf[1024];
+    snprintf(buf, 1024, "[EPOCH %d] %.3f -> %.3f (Rank %d, %u items)\n", epoch,
+             part_range_begin, part_range_end, rank, part_item_count);
+    return buf;
+  }
+
 } PartitionManifestItem;
 
 class PartitionManifestMatch {
@@ -50,7 +106,7 @@ class PartitionManifestMatch {
   }
 
   uint64_t GetMatchesByRank(int rank,
-                        std::vector<PartitionManifestItem>& rank_tables) {
+                            std::vector<PartitionManifestItem>& rank_tables) {
     std::vector<size_t>& rank_items = ranks_[rank];
     uint64_t mass_rank = 0;
 
@@ -75,6 +131,8 @@ class PartitionManifestMatch {
 
   PartitionManifestItem& operator[](size_t i) { return this->items_[i]; }
 
+  void Print();
+
  private:
   void SetKVSizes(uint64_t key_sz, uint64_t val_sz) {
     key_sz_ = key_sz;
@@ -95,14 +153,21 @@ class PartitionManifestMatch {
 class PartitionManifest {
  public:
   PartitionManifest()
-      : mass_total_(0), sizes_set_(false), key_sz_(0), val_sz_(0) {}
+      : mass_total_(0),
+        num_epochs_(0),
+        sizes_set_(false),
+        key_sz_(0),
+        val_sz_(0) {}
 
-  int GetOverLappingEntries(float point, PartitionManifestMatch& match);
+  int GetOverLappingEntries(int epoch, float point,
+                            PartitionManifestMatch& match);
 
   int GetOverLappingEntries(int epoch, float range_begin, float range_end,
                             PartitionManifestMatch& match);
 
-  Status GetKVSizes(uint64_t& key_sz, uint64_t& val_sz) {
+  Status GenOverlapStats(const char* dir_path, Env* env);
+
+  Status GetKVSizes(uint64_t& key_sz, uint64_t& val_sz) const {
     Status s = Status::OK();
 
     if (sizes_set_) {
@@ -115,18 +180,52 @@ class PartitionManifest {
     return s;
   }
 
+  Status GetEpochCount(int& num_epochs) const {
+    num_epochs = num_epochs_;
+    return Status::OK();
+  };
+
+  Status GetEpochRange(int epoch, Range& r) {
+    Status s = Status::OK();
+
+    if (range_epoch_.size() > epoch) {
+      r = range_epoch_[epoch];
+    } else {
+      s = Status::InvalidArgument("Epoch not found");
+    }
+
+    return s;
+  }
+
+  Status GetEpochMass(int epoch, uint64_t& mass) {
+    Status s = Status::OK();
+
+    if (mass_epoch_.size() > epoch) {
+      mass = mass_epoch_[epoch];
+    } else {
+      s = Status::InvalidArgument("Epoch not found");
+    }
+
+    return s;
+  }
+
  private:
   friend class PartitionManifestReader;
+
+  void GenEpochStatsCSV(const int epoch, WritableFile* fd);
 
   void AddItem(PartitionManifestItem& item) {
     items_.push_back(item);
     mass_total_ += item.part_item_count;
 
-    if (item.epoch >= (int) mass_epoch_.size()) {
-      mass_epoch_.resize(item.epoch + 1, 0);
+    if (item.epoch >= num_epochs_) {
+      num_epochs_ = item.epoch + 1;  // zero-indexed;
+      mass_epoch_.resize(num_epochs_, 0);
+      range_epoch_.resize(num_epochs_);
     }
 
     mass_epoch_[item.epoch] += item.part_item_count;
+    range_epoch_[item.epoch].Extend(item.part_range_begin, item.part_range_end);
   }
 
   Status UpdateKVSizes(const uint64_t key_sz, const uint64_t val_sz) {
@@ -145,7 +244,9 @@ class PartitionManifest {
 
   std::vector<PartitionManifestItem> items_;
   uint64_t mass_total_;
+  int num_epochs_;
   std::vector<uint64_t> mass_epoch_;
+  std::vector<Range> range_epoch_;
   bool sizes_set_;
   uint64_t key_sz_;
   uint64_t val_sz_;
