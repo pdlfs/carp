@@ -306,9 +306,7 @@ void RangeReader::RankwiseSSTReadWorker(void* arg) {
     req.scratch = &(scratch_vec[i][0]);
   }
 
-  uint64_t bytestmp = req_vec[0].bytes;
   s = wi->fdcache->ReadBatch(rank, req_vec);
-  assert(bytestmp == req_vec[0].bytes);
   if (!s.ok()) {
     logf(LOG_ERRO, "Read Failure");
     return;
