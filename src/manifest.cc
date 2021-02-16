@@ -4,6 +4,7 @@
 
 #include "carp/manifest.h"
 
+#include <algorithm>
 #include "common.h"
 
 namespace pdlfs {

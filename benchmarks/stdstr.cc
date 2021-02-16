@@ -2,6 +2,7 @@
 // Created by Ankush J on 2/15/21.
 //
 
+#include <math.h>
 #include <pdlfs-common/env.h>
 #include <pdlfs-common/port.h>
 #include <vector>
