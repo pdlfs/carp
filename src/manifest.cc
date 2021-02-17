@@ -4,8 +4,9 @@
 
 #include "carp/manifest.h"
 
-#include <algorithm>
 #include "common.h"
+
+#include <algorithm>
 
 namespace pdlfs {
 namespace plfsio {
@@ -61,7 +62,7 @@ Status PartitionManifest::GenOverlapStats(const char* dir_path,
   }
 
   fprintf(stderr, "[Analytics] Total SSTs: %zu, zero width: %d\n",
-      items_.size(), zero_sst_cnt_);
+          items_.size(), zero_sst_cnt_);
 
   return Status::OK();
 }
@@ -81,15 +82,22 @@ void PartitionManifest::GenEpochStatsCSV(const int epoch,
   const char* header = "Epoch,Point,MatchMass,TotalMass,MatchCount\n";
   fd->Append(Slice(header));
 
+  uint64_t max_match_mass = 0;
+
   for (float r = rbeg; r < rend; r += rdelta) {
     PartitionManifestMatch match;
     GetOverLappingEntries(epoch, r, match);
     char buf[1024];
-    int buf_len = snprintf(buf, 1024, "%d,%f,%llu,%llu,%zu\n", epoch, r,
+    int buf_len = snprintf(buf, 1024, "%d,%f,%llu,%llu,%llu\n", epoch, r,
                            match.TotalMass(), epoch_mass, match.Size());
     assert(buf_len > 0 and buf_len < 1024);
     fd->Append(Slice(buf, buf_len));
+
+    max_match_mass = std::max(max_match_mass, match.TotalMass());
   }
+
+  fprintf(stderr, "[Analytics] [epoch %d] Max Overlap: %.3f%%\n", epoch,
+          max_match_mass * 1.0f / epoch_mass);
 
   fd->Close();
 }
