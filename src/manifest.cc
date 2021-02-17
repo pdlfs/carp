@@ -60,6 +60,9 @@ Status PartitionManifest::GenOverlapStats(const char* dir_path,
     delete fd;
   }
 
+  fprintf(stderr, "[Analytics] Total SSTs: %zu, zero width: %d\n",
+      items_.size(), zero_sst_cnt_);
+
   return Status::OK();
 }
 

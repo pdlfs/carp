@@ -44,7 +44,7 @@ struct Range {
   }
 
   void Extend(float beg, float end) {
-    assert(beg < end);
+    assert(beg <= end);
     range_min = std::min(range_min, beg);
     range_max = std::max(range_max, end);
   }
@@ -157,7 +157,8 @@ class PartitionManifest {
         num_epochs_(0),
         sizes_set_(false),
         key_sz_(0),
-        val_sz_(0) {}
+        val_sz_(0),
+        zero_sst_cnt_(0) {}
 
   int GetOverLappingEntries(int epoch, float point,
                             PartitionManifestMatch& match);
@@ -218,6 +219,10 @@ class PartitionManifest {
     items_.push_back(item);
     mass_total_ += item.part_item_count;
 
+    if (item.part_range_begin == item.part_range_end) {
+      zero_sst_cnt_++;
+    }
+
     if (item.epoch >= num_epochs_) {
       num_epochs_ = item.epoch + 1;  // zero-indexed;
       mass_epoch_.resize(num_epochs_, 0);
@@ -250,6 +255,7 @@ class PartitionManifest {
   bool sizes_set_;
   uint64_t key_sz_;
   uint64_t val_sz_;
+  int zero_sst_cnt_;
 };
 }  // namespace plfsio
 }  // namespace pdlfs
