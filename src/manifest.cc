@@ -96,8 +96,8 @@ void PartitionManifest::GenEpochStatsCSV(const int epoch,
     max_match_mass = std::max(max_match_mass, match.TotalMass());
   }
 
-  fprintf(stderr, "[Analytics] [epoch %d] Max Overlap: %.3f%%\n", epoch,
-          max_match_mass * 1.0f / epoch_mass);
+  fprintf(stderr, "[Analytics] [epoch %d] Max Overlap: %.2f%%\n", epoch,
+          max_match_mass * 100.0f / epoch_mass);
 
   fd->Close();
 }
