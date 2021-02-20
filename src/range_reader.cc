@@ -72,8 +72,11 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
 
 #define ITEM(ptile) \
   query_results[(ptile * (query_results.size() - 1) / 100)].key
-  logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(1),
-       ITEM(10), ITEM(50), ITEM(100));
+
+  if (query_results.size()) {
+    logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0),
+         ITEM(10), ITEM(50), ITEM(100));
+  }
 
   logger_.PrintStats();
 
