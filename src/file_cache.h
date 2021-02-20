@@ -27,6 +27,7 @@ struct ReadRequest {
   /* offset is relative to current cursor for a sequential file */
   uint64_t offset;
   uint64_t bytes;
+  uint64_t item_count;
   Slice slice;
   char* scratch;
 

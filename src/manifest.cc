@@ -31,6 +31,9 @@ int PartitionManifest::GetOverLappingEntries(int epoch, float range_begin,
     if (items_[i].epoch == epoch &&
         items_[i].Overlaps(range_begin, range_end)) {
       match.AddItem(items_[i]);
+      fprintf(stderr, "@%llu Y\n", items_[i].offset);
+    } else {
+      fprintf(stderr, "@%llu\n", items_[i].offset);
     }
   }
 
@@ -103,9 +106,8 @@ void PartitionManifest::GenEpochStatsCSV(const int epoch,
 }
 
 void PartitionManifestMatch::Print() {
-  std::sort(items_.begin(), items_.end());
   for (size_t i = 0; i < Size(); i++) {
-    logf(LOG_INFO, "%s\n", items_[i].ToString().c_str());
+    logf(LOG_DBUG, "%s\n", items_[i].ToString().c_str());
   }
 }
 }  // namespace plfsio

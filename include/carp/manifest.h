@@ -79,8 +79,9 @@ typedef struct PartitionManifestItem {
 
   std::string ToString() {
     char buf[1024];
-    snprintf(buf, 1024, "[EPOCH %d] %.3f -> %.3f (Rank %d, %u items)\n", epoch,
-             part_range_begin, part_range_end, rank, part_item_count);
+    snprintf(buf, 1024, "[EPOCH %d][%10llu]\t%.3f -> %.3f\t(Rank %d, %u items)\n",
+             epoch, offset, part_range_begin, part_range_end, rank,
+             part_item_count);
     return buf;
   }
 

@@ -70,9 +70,11 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
 
   logf(LOG_INFO, "Query Results: %zu elements found\n", query_results.size());
 
-//#define ITEM(idx) query_results[(idx)].key
-//   logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f...\n", ITEM(5000),
-//        ITEM(6500), ITEM(8000));
+#define ITEM(ptile) \
+  query_results[(ptile * (query_results.size() - 1) / 100)].key
+  logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(1),
+       ITEM(10), ITEM(50), ITEM(100));
+
   logger_.PrintStats();
 
   return Status::OK();
@@ -268,9 +270,7 @@ void RangeReader::SSTReadWorker(void* arg) {
   uint64_t block_offset = 0;
   while (block_offset < sst_sz) {
     qvec[qidx].key = DecodeFloat32(&slice[block_offset]);
-//    qvec[qidx].value = std::string(&slice[block_offset + key_sz], val_sz);
-    //    kp.value = "";
-
+    // XXX: val?
     block_offset += item_sz;
     qidx++;
   }
@@ -304,6 +304,8 @@ void RangeReader::RankwiseSSTReadWorker(void* arg) {
     req.bytes = kvp_sz * item.part_item_count;
     scratch_vec[i].resize(req.bytes);
     req.scratch = &(scratch_vec[i][0]);
+    /* we copy this because req-vec gets reordered */
+    req.item_count = item.part_item_count;
   }
 
   s = wi->fdcache->ReadBatch(rank, req_vec);
@@ -314,15 +316,19 @@ void RangeReader::RankwiseSSTReadWorker(void* arg) {
 
   // XXX: don't reuse req_vec, or create copy above
   for (size_t i = 0; i < req_vec.size(); i++) {
-    // printf("===> %d %lu\n", rank, req_vec[i].offset);
     Slice slice = req_vec[i].slice;
-    uint64_t block_offset = 0;
-    while (block_offset < req_vec[i].bytes) {
-      qvec[qidx].key = DecodeFloat32(&slice[block_offset]);
-//      qvec[qidx].value = std::string(&slice[block_offset + key_sz], val_sz);
-      //    kp.value = "";
 
-      block_offset += kvp_sz;
+    uint64_t keyblk_sz = req_vec[i].item_count * key_sz;
+    /* valblk_off is absolute, keyblk_cur is relative */
+    uint64_t keyblk_cur = 0;
+    uint64_t valblk_cur = req_vec[i].offset + keyblk_sz;
+
+    while (keyblk_cur < keyblk_sz) {
+      qvec[qidx].key = DecodeFloat32(&slice[keyblk_cur]);
+      qvec[qidx].offset = valblk_cur;
+
+      keyblk_cur += key_sz;
+      valblk_cur += val_sz;
       qidx++;
     }
   }
@@ -354,8 +360,7 @@ void RangeReader::ReadBlock(int rank, uint64_t offset, uint64_t size,
   while (block_offset < size) {
     KeyPair kp;
     kp.key = DecodeFloat32(&slice[block_offset]);
-    //            kp.value = std::string(&slice[block_offset + 4], 56);
-//    kp.value = "";
+    // XXX: val?
     query_results_.push_back(kp);
 
     block_offset += 60;
