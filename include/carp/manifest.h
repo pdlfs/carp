@@ -40,7 +40,7 @@ struct Range {
 
   void Extend(float f) {
     range_min = std::min(range_min, f);
-    range_max = std::max(range_min, f);
+    range_max = std::max(range_max, f);
   }
 
   void Extend(float beg, float end) {
