@@ -31,9 +31,6 @@ int PartitionManifest::GetOverLappingEntries(int epoch, float range_begin,
     if (items_[i].epoch == epoch &&
         items_[i].Overlaps(range_begin, range_end)) {
       match.AddItem(items_[i]);
-      fprintf(stderr, "@%llu Y\n", items_[i].offset);
-    } else {
-      fprintf(stderr, "@%llu\n", items_[i].offset);
     }
   }
 
