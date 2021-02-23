@@ -13,6 +13,8 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
   dir_path_ = dir_path;
   fdcache_.ReadDirectory(dir_path_, num_ranks_);
 
+  manifest_reader_.EnableManifestOutput(dir_path);
+
   RandomAccessFile* src;
   std::vector<ManifestReadWorkItem> work_items;
   work_items.resize(num_ranks_);

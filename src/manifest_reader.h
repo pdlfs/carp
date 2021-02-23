@@ -15,6 +15,8 @@ class PartitionManifestReader {
  public:
   PartitionManifestReader(PartitionManifest& manifest);
 
+  void EnableManifestOutput(std::string out_path) { output_path_ = out_path; }
+
   Status ReadManifest(int rank, Slice& footer_data, uint64_t footer_sz);
 
   Status UpdateKVSizes(uint64_t key_sz, uint64_t val_sz) {
@@ -49,6 +51,8 @@ class PartitionManifestReader {
   size_t entry_sizes_[num_entries_];
   size_t offsets_[num_entries_];
   size_t item_sz_;
+  std::string output_path_;
+  FILE* file_out_;
 };
 }  // namespace plfsio
 }  // namespace pdlfs
