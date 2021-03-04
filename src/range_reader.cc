@@ -41,8 +41,8 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
 
   if (options_.analytics_on) {
     logf(LOG_INFO, "Running analytics...\n");
-    /* write manifest to plfs/particle/../../exp-info */
-    std::string exp_path = dir_path + "/../../exp-info";
+    /* write manifest to plfs/particle/../../plots */
+    std::string exp_path = dir_path + "/../../plots";
 
     Env *env = options_.env;
     if (!env->FileExists(exp_path.c_str())) {

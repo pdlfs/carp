@@ -54,7 +54,7 @@ Status PartitionManifest::GenOverlapStats(const char* dir_path,
   char csv_path[2048];
 
   for (int epoch = 0; epoch < num_epochs; epoch++) {
-    snprintf(csv_path, 2048, "%s/manifest.e%d.csv", dir_path, epoch);
+    snprintf(csv_path, 2048, "%s/rdb.olap.e%d.csv", dir_path, epoch);
     WritableFile* fd;
     env->NewWritableFile(csv_path, &fd);
     GenEpochStatsCSV(epoch, fd);
