@@ -28,7 +28,7 @@ class PartitionManifestReader {
 
  private:
   void ReadFooterEpoch(int epoch, int rank, Slice& data, uint64_t epoch_offset,
-                       uint64_t epoch_sz);
+                       uint64_t epoch_sz, FILE* file_out = NULL);
 
   static void ComputeInternalOffsets(const size_t entry_sizes[],
                                      size_t offsets[], int num_entries,
@@ -52,7 +52,6 @@ class PartitionManifestReader {
   size_t offsets_[num_entries_];
   size_t item_sz_;
   std::string output_path_;
-  FILE* file_out_;
 };
 }  // namespace plfsio
 }  // namespace pdlfs

@@ -10,6 +10,8 @@ namespace plfsio {
 Status RangeReader::ReadManifest(const std::string& dir_path) {
   logger_.RegisterBegin("MFREAD");
 
+  Status s = Status::OK();
+
   dir_path_ = dir_path;
   fdcache_.ReadDirectory(dir_path_, num_ranks_);
 
@@ -39,10 +41,18 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
 
   if (options_.analytics_on) {
     logf(LOG_INFO, "Running analytics...\n");
-    manifest_.GenOverlapStats(dir_path.c_str(), options_.env);
+    /* write manifest to plfs/particle/../../exp-info */
+    std::string exp_path = dir_path + "/../../exp-info";
+
+    Env *env = options_.env;
+    if (!env->FileExists(exp_path.c_str())) {
+      s = env->CreateDir(exp_path.c_str());
+    }
+
+    if (s.ok()) manifest_.GenOverlapStats(exp_path.c_str(), env);
   }
 
-  return Status::OK();
+  return s;
 }
 
 Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {

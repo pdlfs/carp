@@ -12,7 +12,7 @@
 namespace pdlfs {
 namespace plfsio {
 PartitionManifestReader::PartitionManifestReader(PartitionManifest& manifest)
-    : manifest_(manifest), file_out_(NULL) {
+    : manifest_(manifest) {
   size_t entry_init[] = {sizeof(uint64_t), sizeof(uint64_t), sizeof(float),
                          sizeof(float),    sizeof(uint32_t), sizeof(uint32_t)};
   std::copy(entry_init, entry_init + num_entries_, entry_sizes_);
@@ -24,10 +24,12 @@ Status PartitionManifestReader::ReadManifest(int rank, Slice& footer_data,
   uint64_t epoch_offset = 0;
   Status s;
 
+  FILE* file_out = NULL;
+
   if (!output_path_.empty()) {
     char fpath[1024];
     snprintf(fpath, 1024, "%s/vpic-manifest.%d", output_path_.c_str(), rank);
-    file_out_ = fopen(fpath, "w+");
+    file_out = fopen(fpath, "w+");
   }
 
   while (epoch_offset < footer_sz) {
@@ -38,14 +40,14 @@ Status PartitionManifestReader::ReadManifest(int rank, Slice& footer_data,
          off_prev);
 
     ReadFooterEpoch(num_ep_written, rank, footer_data, epoch_offset + 12,
-                    off_prev);
+                    off_prev, file_out);
 
     epoch_offset += off_prev + 12;
   }
 
-  if (file_out_) {
-    fclose(file_out_);
-    file_out_ = NULL;
+  if (file_out) {
+    fclose(file_out);
+    file_out = NULL;
   }
 
   return s;
@@ -53,7 +55,8 @@ Status PartitionManifestReader::ReadManifest(int rank, Slice& footer_data,
 
 void PartitionManifestReader::ReadFooterEpoch(int epoch, int rank, Slice& data,
                                               const uint64_t epoch_offset,
-                                              const uint64_t epoch_sz) {
+                                              const uint64_t epoch_sz,
+                                              FILE* file_out) {
   int num_items = epoch_sz / item_sz_;
 
   uint64_t cur_offset = epoch_offset;
@@ -75,8 +78,8 @@ void PartitionManifestReader::ReadFooterEpoch(int epoch, int rank, Slice& data,
          item.epoch, item.offset, item.part_range_begin, item.part_range_end,
          item.part_item_count, item.part_item_oob);
 
-    if (file_out_) {
-      fprintf(file_out_, "%d,%" PRIu64 ",%f,%f,%u,%u\n", item.epoch,
+    if (file_out) {
+      fprintf(file_out, "%d,%" PRIu64 ",%f,%f,%u,%u\n", item.epoch,
               item.offset, item.part_range_begin, item.part_range_end,
               item.part_item_count, item.part_item_oob);
     }
