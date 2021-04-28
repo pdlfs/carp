@@ -67,6 +67,30 @@ Status PartitionManifest::GenOverlapStats(const char* dir_path,
   return Status::OK();
 }
 
+static std::vector<float> GenPoints(float rbeg, float rend) {
+  float cutoffs[] = {rbeg, 2, 5, 10, 20, 50, 100};
+  float deltas[] = {0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0};
+
+  std::vector<float> probe_points;
+
+  int ni = sizeof(cutoffs) / sizeof(cutoffs[0]);
+  for (int i = ni - 1; i >= 0; i--) {
+    float loop_beg = cutoffs[i];
+    float loop_del = deltas[i];
+    if (rend <= loop_beg) continue;
+
+    // rend > loop_beg
+    for (float f = loop_beg; f < rend; f += loop_del) {
+      probe_points.push_back(f);
+    }
+
+    rend = loop_beg;
+  }
+
+  std::sort(probe_points.begin(), probe_points.end());
+  return probe_points;
+}
+
 void PartitionManifest::GenEpochStatsCSV(const int epoch,
                                          WritableFile* const fd) {
   Range range;
@@ -84,7 +108,10 @@ void PartitionManifest::GenEpochStatsCSV(const int epoch,
 
   uint64_t max_match_mass = 0;
 
-  for (float r = rbeg; r < rend; r += rdelta) {
+  std::vector<float> probe_points = GenPoints(rbeg, rend);
+
+  for (size_t i = 0; i < probe_points.size(); i++) {
+    float r = probe_points[i];
     PartitionManifestMatch match;
     GetOverLappingEntries(epoch, r, match);
     char buf[1024];
