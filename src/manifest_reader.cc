@@ -7,14 +7,13 @@
 #include "common.h"
 #include "range_reader.h"
 
-#include <inttypes.h>
-
 namespace pdlfs {
 namespace plfsio {
 PartitionManifestReader::PartitionManifestReader(PartitionManifest& manifest)
     : manifest_(manifest) {
   size_t entry_init[] = {sizeof(uint64_t), sizeof(uint64_t), sizeof(float),
-                         sizeof(float),    sizeof(uint32_t), sizeof(uint32_t)};
+                         sizeof(float),    sizeof(float),    sizeof(float),
+                         sizeof(uint32_t), sizeof(uint32_t), sizeof(uint32_t)};
   std::copy(entry_init, entry_init + num_entries_, entry_sizes_);
   ComputeInternalOffsets(entry_sizes_, offsets_, num_entries_, item_sz_);
 }
@@ -70,18 +69,18 @@ void PartitionManifestReader::ReadFooterEpoch(int epoch, int rank, Slice& data,
     item.offset = DecodeFixed64(&data[cur_offset + offsets_[1]]);
     item.part_range_begin = DecodeFloat32(&data[cur_offset + offsets_[2]]);
     item.part_range_end = DecodeFloat32(&data[cur_offset + offsets_[3]]);
-    item.part_item_count = DecodeFixed32(&data[cur_offset + offsets_[4]]);
-    item.part_item_oob = DecodeFixed32(&data[cur_offset + offsets_[5]]);
+    item.part_expected_begin = DecodeFloat32(&data[cur_offset + offsets_[4]]);
+    item.part_expected_end = DecodeFloat32(&data[cur_offset + offsets_[5]]);
+    item.updcnt = DecodeFixed32(&data[cur_offset + offsets_[6]]);
+    item.part_item_count = DecodeFixed32(&data[cur_offset + offsets_[7]]);
+    item.part_item_oob = DecodeFixed32(&data[cur_offset + offsets_[8]]);
 
-    logf(LOG_DBG2,
-         "[Entry E:%d] Offset:%lu RBEG:%.3f RENG:%.3f COUNT:%u OOB:%u\n",
-         item.epoch, item.offset, item.part_range_begin, item.part_range_end,
-         item.part_item_count, item.part_item_oob);
+    std::string item_dbg = item.ToString();
+    logf(LOG_DBG2, "%s\n", item_dbg.c_str());
 
     if (file_out) {
-      fprintf(file_out, "%d,%" PRIu64 ",%f,%f,%u,%u\n", item.epoch,
-              item.offset, item.part_range_begin, item.part_range_end,
-              item.part_item_count, item.part_item_oob);
+      std::string item_csv = item.ToCSVString();
+      fprintf(file_out, "%s\n", item_csv.c_str());
     }
 
     // Note to self: if this is a bottleneck,

@@ -45,9 +45,11 @@ class PartitionManifestReader {
   port::Mutex manifest_mutex_;
 
   /* | ITEM | ITEM | ITEM | ...
-   * ITEM = [IDX:8B | OFFSET:8B | RBEG:4B | REND:4B | ICNT: 4B | IOOB: 4B]
+   * ITEM = [IDX:8B | OFFSET:8B | RBEG:4B | REND:4B |
+   *         REXPBEG: 4B | REXPEND: 4B | RUPDCNT: 4B |
+   *         ICNT: 4B | IOOB: 4B]
    */
-  static const size_t num_entries_ = 6;
+  static const size_t num_entries_ = 9;
   size_t entry_sizes_[num_entries_];
   size_t offsets_[num_entries_];
   size_t item_sz_;
