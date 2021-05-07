@@ -1,4 +1,9 @@
-set(carp-io-srcs common.cc range_reader.cc file_cache.cc manifest_reader.cc)
+set(carp-nw-srcs carp/carp_utils.cc)
+set(carp-io-srcs
+        reader/range_reader.cc
+        reader/file_cache.cc
+        reader/manifest_reader.cc
+        reader/manifest.cc)
 
 # configure/load in standard modules we plan to use
 include(CMakePackageConfigHelpers)
@@ -29,7 +34,7 @@ set(CARP_VERSION "${carp-vers}.${CARP_VERSION_PATCH}")
 configure_file("../include/carp/carp_config.h.in"
         "../include/carp/carp_config.h" @ONLY)
 
-set(carp-all-srcs ${carp-io-srcs} manifest_reader.h manifest.cc task_completion_tracker.h)
+set(carp-all-srcs ${carp-io-srcs} ${carp-nw-srcs} common.cc)
 
 add_library(carp ${carp-all-srcs})
 target_include_directories(carp PUBLIC $<INSTALL_INTERFACE:include>)
@@ -40,17 +45,17 @@ target_include_directories(carp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(carp PUBLIC pdlfs-common)
 
 if (PDLFS_TBB)
-  find_package(TBB REQUIRED)
-  message(STATUS "TBB optimizations will be enabled only if compiler suports them")
-  target_link_libraries(carp PUBLIC TBB::tbb)
-endif()
+    find_package(TBB REQUIRED)
+    message(STATUS "TBB optimizations will be enabled only if compiler suports them")
+    target_link_libraries(carp PUBLIC TBB::tbb)
+endif ()
 
 if (THREADS_HAVE_PTHREAD_ARG)
     target_compile_options(carp PUBLIC "-pthread")
 endif ()
 
 if (CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(carp PUBLIC "${CMAKE_THREAD_LIBS_INIT}")
+    target_link_libraries(carp PUBLIC "${CMAKE_THREAD_LIBS_INIT}")
 endif ()
 set_target_properties(carp PROPERTIES VERSION ${CARP_VERSION}
         SOVERSION ${CARP_VERSION_MAJOR})
