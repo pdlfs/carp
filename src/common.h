@@ -6,6 +6,8 @@
 
 #include "pdlfs-common/env.h"
 
+#include <math.h>
+
 #define LOG_ERRO 5
 #define LOG_WARN 4
 #define LOG_INFO 3
@@ -17,6 +19,35 @@
 int logf(int lvl, const char* fmt, ...);
 
 namespace pdlfs {
+namespace carp {
+// clang-format off
+class FloatUtils {
+public:
+  static constexpr float kFloatCompThreshold = 1e-3;
+
+  static bool float_eq(float a, float b) {
+    return fabs(a - b) < kFloatCompThreshold;
+  }
+
+  static bool float_gt(float a, float b) {
+    return a > b + kFloatCompThreshold;
+  }
+
+  static bool float_gte(float a, float b) {
+    return a > b - kFloatCompThreshold;
+  }
+
+  static bool float_lt(float a, float b) {
+    return a < b - kFloatCompThreshold;
+  }
+
+  static bool float_lte(float a, float b) {
+    return a < b + kFloatCompThreshold;
+  }
+};
+// clang-format on
+}  // namespace carp
+
 namespace plfsio {
 typedef struct RdbOptions {
   Env* env;

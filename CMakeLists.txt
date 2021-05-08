@@ -76,6 +76,6 @@ endif ()
 
 
 add_subdirectory(src)
-add_subdirectory(reader)
+add_subdirectory(tools)
 add_subdirectory(benchmarks)
 
