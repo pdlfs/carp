@@ -83,5 +83,3 @@ endif ()
 #
 # end of the compiler/machine/os dependent stuff!
 #
-
-add_subdirectory(minicarp)
