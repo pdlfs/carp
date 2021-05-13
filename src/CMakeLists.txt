@@ -3,7 +3,8 @@ set(carp-io-srcs
         reader/range_reader.cc
         reader/file_cache.cc
         reader/manifest_reader.cc
-        reader/manifest.cc)
+        reader/manifest.cc
+        reader/plfs_wrapper.cc)
 
 # configure/load in standard modules we plan to use
 include(CMakePackageConfigHelpers)
@@ -14,6 +15,7 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 # that we should switch to when we are ready to require 3.1 or better.
 # cmake 3.1 was released late 2014.
 find_package(Threads REQUIRED)
+find_package(deltafs REQUIRED)
 
 # common lib is always required
 set(CARP_REQUIRED_PACKAGES "pdlfs-common")
@@ -43,6 +45,7 @@ target_include_directories(carp BEFORE PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../../include>)
 target_include_directories(carp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(carp PUBLIC pdlfs-common)
+target_link_libraries(carp PUBLIC deltafs)
 
 if (PDLFS_TBB)
     find_package(TBB REQUIRED)
@@ -83,3 +86,4 @@ endif ()
 #
 # end of the compiler/machine/os dependent stuff!
 #
+add_subdirectory(reader)
