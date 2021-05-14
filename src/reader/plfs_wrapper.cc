@@ -41,7 +41,7 @@ Status PlfsWrapper::OpenDir(const char* path) {
   opts_.skip_checksums = 1;
   opts_.io_engine = DELTAFS_PLFSDIR_RANGEDB;
   // XXX: tmp, hardcoded
-  opts_.particle_size = 56;
+  opts_.particle_size = 60;
   opts_.particle_buf_size = 2097152;
   opts_.particle_count = 1;  // not used
   opts_.bgdepth = 4;

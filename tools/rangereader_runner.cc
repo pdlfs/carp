@@ -9,7 +9,7 @@
  * found in the LICENSE file. See the AUTHORS file for names of contributors.
  */
 
-#include "range_reader.h"
+#include "reader/range_reader.h"
 
 #include "pdlfs-common/env.h"
 
@@ -96,7 +96,7 @@ void ParseOptions(int argc, char* argv[], pdlfs::plfsio::RdbOptions& options) {
     }
   }
 
-#define BOOLS(p) (p ? "ON" : "OFF")
+#define BOOLS(p) ((p) ? "ON" : "OFF")
 
   printf("[Threads] %d\n", options.parallelism);
   printf("[Analytics] %s\n", BOOLS(options.analytics_on));

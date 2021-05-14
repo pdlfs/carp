@@ -7,6 +7,7 @@
 #include "pdlfs-common/env.h"
 #include "pdlfs-common/status.h"
 
+#include <algorithm>
 #include <float.h>
 #include <inttypes.h>
 #include <map>
@@ -74,9 +75,8 @@ typedef struct PartitionManifestItem {
   bool operator<(const PartitionManifestItem& rhs) const {
 #define PROPLT(x) (x < rhs.x)
 #define PROPEQ(x) (x == rhs.x)
-    return (
-        PROPLT(epoch) || (PROPEQ(epoch) && PROPLT(part_range_begin)) ||
-        (PROPEQ(epoch) && PROPEQ(part_range_begin) && PROPLT(part_range_end)));
+    return (PROPLT(epoch) || (PROPEQ(epoch) && PROPLT(part_range_begin)) ||
+            (PROPEQ(epoch) && PROPEQ(part_range_begin) && PROPLT(offset)));
 #undef PROPLT
 #undef PROPEQ
   }
@@ -109,6 +109,27 @@ typedef struct PartitionManifestItem {
   }
 
 } PartitionManifestItem;
+
+#define PROPLT(x) (lhs.x < rhs.x)
+#define PROPEQ(x) (lhs.x == rhs.x)
+struct PMIRangeComparator {
+  bool operator()(const PartitionManifestItem& lhs,
+                  const PartitionManifestItem& rhs) const {
+    return (
+        PROPLT(epoch) || (PROPEQ(epoch) && PROPLT(part_range_begin)) ||
+        (PROPEQ(epoch) && PROPEQ(part_range_begin) && PROPLT(part_range_end)));
+  }
+};
+
+struct PMIOffsetComparator {
+  bool operator()(const PartitionManifestItem& lhs,
+                  const PartitionManifestItem& rhs) const {
+    return (PROPLT(epoch) || (PROPEQ(epoch) && PROPLT(rank)) ||
+            (PROPEQ(epoch) && PROPEQ(rank) && PROPLT(offset)));
+  }
+};
+#undef PROPLT
+#undef PROPEQ
 
 class PartitionManifestMatch {
  public:
@@ -233,6 +254,18 @@ class PartitionManifest {
 
     return s;
   }
+
+  void SortByKey() {
+    std::sort(items_.begin(), items_.end(), PMIRangeComparator());
+  }
+
+  void SortByOffset() {
+    std::sort(items_.begin(), items_.end(), PMIOffsetComparator());
+  }
+
+  PartitionManifestItem& operator[](size_t i) { return this->items_[i]; }
+
+  size_t Size() const { return items_.size(); }
 
  private:
   friend class PartitionManifestReader;

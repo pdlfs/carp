@@ -28,15 +28,6 @@ struct KeyPair {
   size_t offset;
 };
 
-struct ParsedFooter {
-  Slice manifest_data;
-  std::string scratch;
-  uint32_t num_epochs;
-  uint64_t manifest_sz;
-  uint64_t key_sz;
-  uint64_t val_sz;
-};
-
 struct ManifestReadWorkItem {
   int rank;
   CachingDirReader<SequentialFile>* fdcache;

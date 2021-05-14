@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "range_reader.h"
+#include "reader_base.h"
 
 #include <string>
 
@@ -18,7 +19,7 @@ Status CachingDirReader<T>::ReadDirectory(std::string dir, int& num_ranks) {
   dir_ = dir;
   uint64_t fsz;
 
-  for (int rank = 0; ; rank++) {
+  for (int rank = 0;; rank++) {
     std::string fname = RdbName(dir_, rank);
     bool file_exists = env_->FileExists(fname.c_str());
     if (!file_exists) break;
@@ -36,6 +37,7 @@ Status CachingDirReader<T>::ReadDirectory(std::string dir, int& num_ranks) {
 
   logf(LOG_INFO, "%u files found.\n", cache_.size());
   num_ranks = cache_.size();
+  num_ranks_ = num_ranks;
 
   return Status::OK();
 }

@@ -4,7 +4,8 @@ set(carp-io-srcs
         reader/file_cache.cc
         reader/manifest_reader.cc
         reader/manifest.cc
-        reader/plfs_wrapper.cc)
+        reader/plfs_wrapper.cc
+        reader/sliding_sorter.cc reader/reader_base.cc)
 
 # configure/load in standard modules we plan to use
 include(CMakePackageConfigHelpers)
@@ -36,7 +37,7 @@ set(CARP_VERSION "${carp-vers}.${CARP_VERSION_PATCH}")
 configure_file("../include/carp/carp_config.h.in"
         "../include/carp/carp_config.h" @ONLY)
 
-set(carp-all-srcs ${carp-io-srcs} ${carp-nw-srcs} common.cc)
+set(carp-all-srcs ${carp-io-srcs} ${carp-nw-srcs} common.cc reader/FmtChecker.cc reader/FmtChecker.h)
 
 add_library(carp ${carp-all-srcs})
 target_include_directories(carp PUBLIC $<INSTALL_INTERFACE:include>)

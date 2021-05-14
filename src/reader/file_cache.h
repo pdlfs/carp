@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "file_cache.h"
-
 #include "pdlfs-common/env.h"
 
 #include <map>
@@ -31,20 +29,21 @@ struct ReadRequest {
   Slice slice;
   char* scratch;
 
-  bool operator < (const ReadRequest& rhs) const {
-    return offset < rhs.offset;
-  }
+  bool operator<(const ReadRequest& rhs) const { return offset < rhs.offset; }
 };
 
 template <typename T>
 class CachingDirReader {
  public:
   CachingDirReader(Env* env, int max_cache_size = 512)
-      : env_(env), dir_(""), kMaxCacheSz(max_cache_size) {}
+      : env_(env), dir_(""), num_ranks_(0), kMaxCacheSz(max_cache_size) {}
 
-  Status GetFileHandle(int rank, T** fh, uint64_t* fsz, bool force_reopen = false);
+  Status GetFileHandle(int rank, T** fh, uint64_t* fsz,
+                       bool force_reopen = false);
 
   Status ReadDirectory(std::string dir, int& num_ranks);
+
+  int NumRanks() const { return num_ranks_; }
 
 #define KB(n) (n##u) << 10
   Status ReadFooter(int rank, ParsedFooter& parsed_footer,
@@ -69,6 +68,7 @@ class CachingDirReader {
   Env* const env_;
   std::string dir_;
   std::map<int, FileCacheEntry<T> > cache_;
+  int num_ranks_;
   const int kMaxCacheSz;
 };
 

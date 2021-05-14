@@ -4,6 +4,8 @@
 
 #include "range_reader.h"
 
+#include "reader_base.h"
+
 namespace pdlfs {
 namespace plfsio {
 
@@ -44,7 +46,7 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
     /* write manifest to plfs/particle/../../plots */
     std::string exp_path = dir_path + "/../../plots";
 
-    Env *env = options_.env;
+    Env* env = options_.env;
     if (!env->FileExists(exp_path.c_str())) {
       s = env->CreateDir(exp_path.c_str());
     }
@@ -83,9 +85,9 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
   logf(LOG_INFO, "Query Results: %zu elements found\n", query_results.size());
 
 #define ITEM(ptile) \
-  query_results[(ptile * (query_results.size() - 1) / 100)].key
+  query_results[((ptile) * (query_results.size() - 1) / 100)].key
 
-  if (query_results.size()) {
+  if (!query_results.empty()) {
     logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0),
          ITEM(10), ITEM(50), ITEM(100));
   }

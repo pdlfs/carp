@@ -40,6 +40,8 @@ class PlfsWrapper {
 
   Status OpenDir(const char* path);
 
+  bool IsOpen() const { return plfshdl_ != nullptr; }
+
   // opendir
   Status EpochFlush() {
     Status s = Status::OK();
