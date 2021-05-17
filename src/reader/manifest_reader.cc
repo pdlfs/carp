@@ -67,10 +67,10 @@ void PartitionManifestReader::ReadFooterEpoch(int epoch, int rank, Slice& data,
     item.epoch = epoch;
     item.rank = rank;
     item.offset = DecodeFixed64(&data[cur_offset + offsets_[1]]);
-    item.part_range_begin = DecodeFloat32(&data[cur_offset + offsets_[2]]);
-    item.part_range_end = DecodeFloat32(&data[cur_offset + offsets_[3]]);
-    item.part_expected_begin = DecodeFloat32(&data[cur_offset + offsets_[4]]);
-    item.part_expected_end = DecodeFloat32(&data[cur_offset + offsets_[5]]);
+    item.part_expected_begin = DecodeFloat32(&data[cur_offset + offsets_[2]]);
+    item.part_expected_end = DecodeFloat32(&data[cur_offset + offsets_[3]]);
+    item.part_range_begin = DecodeFloat32(&data[cur_offset + offsets_[4]]);
+    item.part_range_end = DecodeFloat32(&data[cur_offset + offsets_[5]]);
     item.updcnt = DecodeFixed32(&data[cur_offset + offsets_[6]]);
     item.part_item_count = DecodeFixed32(&data[cur_offset + offsets_[7]]);
     item.part_item_oob = DecodeFixed32(&data[cur_offset + offsets_[8]]);

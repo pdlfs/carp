@@ -5,7 +5,7 @@ set(carp-io-srcs
         reader/manifest_reader.cc
         reader/manifest.cc
         reader/plfs_wrapper.cc
-        reader/sliding_sorter.cc reader/reader_base.cc)
+        reader/sliding_sorter.cc reader/reader_base.cc reader/compactor.cc)
 
 # configure/load in standard modules we plan to use
 include(CMakePackageConfigHelpers)

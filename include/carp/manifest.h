@@ -52,7 +52,7 @@ struct Range {
   }
 };
 
-typedef struct PartitionManifestItem {
+struct PartitionManifestItem {
   int epoch;
   int rank;
   uint64_t offset;
@@ -107,8 +107,7 @@ typedef struct PartitionManifestItem {
     // clang-format on
     return buf;
   }
-
-} PartitionManifestItem;
+};
 
 #define PROPLT(x) (lhs.x < rhs.x)
 #define PROPEQ(x) (lhs.x == rhs.x)

@@ -10,7 +10,7 @@ namespace pdlfs {
 namespace plfsio {
 size_t SlidingSorter::val_sz_;
 
-Status SlidingSorter::AddItem(const PartitionManifestItem& item) {
+Status SlidingSorter::AddManifestItem(const PartitionManifestItem& item) {
   if (num_ranks_ == 0) {
     rank_cursors_.resize(fdcache_.NumRanks(), 0);
   } else {
@@ -47,7 +47,7 @@ Status SlidingSorter::AddItem(const PartitionManifestItem& item) {
   s = fdcache_.Read(item.rank, req, reopen);
   if (!s.ok()) return s;
 
-  cursor += req.bytes;
+  cursor += req.offset + req.bytes;
 
   AddSST(req.slice, item_sz, item.part_item_count);
   delete buf;

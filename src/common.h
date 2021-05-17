@@ -49,6 +49,9 @@ public:
 }  // namespace carp
 
 namespace plfsio {
+#define KB(n) (1024 * (n))
+#define MB(n) (1024 * KB(n))
+
 typedef struct RdbOptions {
   Env* env;
   std::string data_path;

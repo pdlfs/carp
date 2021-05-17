@@ -34,7 +34,7 @@ class ReaderBase {
         val_sz_(0) {}
 
  protected:
-  void ReadManifests();
+  Status ReadManifests();
 
   /*
    * scratch: a buffer of item.bytes size

@@ -42,7 +42,8 @@ class PlfsWrapper {
 
   bool IsOpen() const { return plfshdl_ != nullptr; }
 
-  // opendir
+  // opendir semantics - call at the beginning of each epoch
+  // last EpochFlush is implicit in Close()
   Status EpochFlush() {
     Status s = Status::OK();
     int rv = deltafs_plfsdir_epoch_flush(plfshdl_, epoch_);

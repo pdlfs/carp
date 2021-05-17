@@ -21,9 +21,6 @@ class FmtChecker : public ReaderBase {
     ReadManifests();
     manifest_.SortByOffset();
 
-#define KB(n) ((n)*1024)
-#define MB(n) (1024 * KB(n))
-
     size_t buf_sz = MB(20);
     char* buf = new char[buf_sz];
     size_t kvp_sz = sizeof(float) + val_sz_;
@@ -48,12 +45,12 @@ class FmtChecker : public ReaderBase {
       }
     }
 
-    delete buf;
+    delete[] buf;
 
     return s;
   }
 
-  bool ValidateSST(PartitionManifestItem meta, Slice& data) {
+  static bool ValidateSST(PartitionManifestItem meta, Slice& data) {
     const float* key_blk = (const float*)data.data();
     uint64_t item_cnt = meta.part_item_count;
     float rbeg = meta.part_range_begin;
@@ -69,7 +66,7 @@ class FmtChecker : public ReaderBase {
     return true;
   }
 
-  void LogSST(PartitionManifestItem meta, Slice& data) {
+  static void LogSST(PartitionManifestItem meta, Slice& data) {
     const float* key_blk = (const float*)data.data();
 
     uint64_t item_cnt = meta.part_item_count;

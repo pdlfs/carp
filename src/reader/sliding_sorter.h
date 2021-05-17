@@ -18,11 +18,27 @@ class SlidingSorter {
                          CachingDirReader<SequentialFile>& fdcache)
       : num_ranks_(0), last_cutoff_(0), dir_out_(dir_out), fdcache_(fdcache) {}
 
-  Status AddItem(const PartitionManifestItem& item);
+  Status AddManifestItem(const PartitionManifestItem& item);
 
   static void SetKVSizes(size_t key_sz, size_t val_sz) {
     assert(key_sz == sizeof(float));
     val_sz_ = val_sz;
+  }
+
+  Status EpochBegin() {
+    Status s = Status::OK();
+    EnsurePlfs();
+
+    if (!merge_pool_.empty()) {
+      s = Status::NotSupported(
+          "EpochBegin has opendir semantics; invoke in epoch-begin."
+          " flush at epoch-end.");
+      return s;
+    }
+
+    s = plfs_.EpochFlush();
+
+    return s;
   }
 
   Status FlushUntil(float cutoff) {
@@ -44,6 +60,7 @@ class SlidingSorter {
     return s;
   }
 
+  /* Equivalent to FlushUntil(FLT_MAX) */
   Status FlushAll() {
     Status s = Status::OK();
     EnsurePlfs();
@@ -52,13 +69,22 @@ class SlidingSorter {
       // write to plfsdir
       const KVItem& item = merge_pool_.top();
       Slice sl(item.val, val_sz_);
-      plfs_.Append(item.key, sl);
+      s = plfs_.Append(item.key, sl);
+      if (!s.ok()) return s;
+
       merge_pool_.pop();
     }
 
-    plfs_.Flush();
-    plfs_.CloseDir();
+    s = plfs_.Flush();
+    if (!s.ok()) return s;
 
+    return s;
+  }
+
+  Status Close() {
+    Status s = Status::OK();
+    EnsurePlfs();
+    s = plfs_.CloseDir();
     return s;
   }
 
@@ -78,18 +104,12 @@ class SlidingSorter {
     const char* valblk = &data[num_items * sizeof(float)];
 
     for (uint64_t i = 0; i < num_items; i++) {
-      if (i % 1000 == 0) {
-        printf("key: %f\n", keyblk[i]);
-      }
-
       Slice val = Slice(&valblk[i * val_sz], val_sz);
       AddPair(keyblk[i], val);
     }
   }
 
-  void AddPair(float key, Slice& val) {
-    merge_pool_.push(KVItem(key, val));
-  }
+  void AddPair(float key, Slice& val) { merge_pool_.push(KVItem(key, val)); }
 
   static const size_t kMaxValSz = 60;
 
@@ -97,7 +117,7 @@ class SlidingSorter {
     float key;
     char val[kMaxValSz];
 
-    KVItem(float key_arg, Slice& val_arg): key(key_arg) {
+    KVItem(float key_arg, Slice& val_arg) : key(key_arg) {
       memcpy(val, val_arg.data(), val_sz_);
     }
 
@@ -106,6 +126,7 @@ class SlidingSorter {
       memcpy(val, other.val, val_sz_);
     }
     bool operator<(const KVItem& other) const { return key < other.key; }
+    bool operator>(const KVItem& other) const { return key > other.key; }
   };
 
   int num_ranks_;
@@ -116,7 +137,8 @@ class SlidingSorter {
 
   CachingDirReader<SequentialFile>& fdcache_;
   std::vector<size_t> rank_cursors_;
-  std::priority_queue<KVItem> merge_pool_;
+  std::priority_queue<KVItem, std::vector<KVItem>, std::greater<KVItem> >
+      merge_pool_;
   PlfsWrapper plfs_;
 };
 }  // namespace plfsio

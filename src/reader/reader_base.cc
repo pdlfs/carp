@@ -6,24 +6,32 @@
 
 namespace pdlfs {
 namespace plfsio {
-void ReaderBase::ReadManifests() {
-  fdcache_.ReadDirectory(options_.data_path, num_ranks_);
-  // XXX: tmp
-  num_ranks_ = 8;
+Status ReaderBase::ReadManifests() {
+  Status s = Status::OK();
+
+  s = fdcache_.ReadDirectory(options_.data_path, num_ranks_);
+  if (!s.ok()) return s;
 
   rank_cursors_.resize(fdcache_.NumRanks(), 0);
 
   for (int rank = 0; rank < num_ranks_; rank++) {
     ParsedFooter pf;
-    fdcache_.ReadFooter(rank, pf);
-    manifest_reader_.UpdateKVSizes(pf.key_sz, pf.val_sz);
-    manifest_reader_.ReadManifest(rank, pf.manifest_data, pf.manifest_sz);
+    s = fdcache_.ReadFooter(rank, pf);
+    if (!s.ok()) return s;
+
+    s = manifest_reader_.UpdateKVSizes(pf.key_sz, pf.val_sz);
+    if (!s.ok()) return s;
+
+    s = manifest_reader_.ReadManifest(rank, pf.manifest_data, pf.manifest_sz);
+    if (!s.ok()) return s;
 
     logf(LOG_DBUG, "[MFREAD] Rank %d, items: %" PRIu64 " (epochs: %u)\n", rank,
          pf.manifest_sz, pf.num_epochs);
   }
 
-  manifest_.GetKVSizes(key_sz_, val_sz_);
+  s = manifest_.GetKVSizes(key_sz_, val_sz_);
+
+  return s;
 }
 
 Status ReaderBase::ReadSST(const PartitionManifestItem& item, Slice& sst,

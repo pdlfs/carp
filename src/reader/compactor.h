@@ -10,45 +10,87 @@
 
 namespace pdlfs {
 namespace plfsio {
+class CompactorLogger {
+ public:
+  explicit CompactorLogger(Env* const env) : env_(env) {}
+  void MarkEpochBegin() {
+    uint64_t now = env_->NowMicros();
+    epoch_begins_.push_back(now);
+
+    if (epoch_begins_.size() != epoch_ends_.size() + 1u) {
+      logf(LOG_WARN, "CompactorLogger: begins/ends mismatched!");
+    }
+  }
+
+  void MarkEpochEnd() {
+    uint64_t now = env_->NowMicros();
+    epoch_ends_.push_back(now);
+
+    if (epoch_begins_.size() != epoch_ends_.size()) {
+      logf(LOG_WARN, "CompactorLogger: begins/ends mismatched!");
+    }
+  }
+
+  void PrintStats();
+
+ private:
+  Env* const env_;
+  std::vector<uint64_t> epoch_begins_;
+  std::vector<uint64_t> epoch_ends_;
+};
+
 class Compactor : public ReaderBase {
  public:
-  Compactor(const RdbOptions& options) : ReaderBase(options) {}
+  explicit Compactor(const RdbOptions& options)
+      : logger_(options.env), ReaderBase(options) {}
 
-  void Run() {
-    ReadManifests();
-    Merge();
+  Status Run() {
+    Status s = Status::OK();
+
+    s = ReadManifests();
+    if (!s.ok()) return s;
+
+    s = MergeAll();
+
+    return s;
   }
 
  private:
-  void Merge() {
-    std::string merge_dest = CreateDestDir();
+  friend class CompactorLogger;
+  CompactorLogger logger_;
+  static const size_t kMemMax = MB(500);
 
-    size_t key_sz, val_sz;
-    manifest_.GetKVSizes(key_sz, val_sz);
-    SlidingSorter::SetKVSizes(key_sz, val_sz);
-    SlidingSorter sorter(merge_dest, fdcache_);
+  struct PartitionedRun {
+    std::vector<PartitionManifestItem> items;
+    float partition_point;
 
-    float cur_min = FLT_MIN;
-    uint64_t cur_count = 0;
+    PartitionedRun() : partition_point(0) {}
 
-    for (size_t i = 0; i < manifest_.Size(); i++) {
-      PartitionManifestItem& item = manifest_[i];
-      cur_count += item.part_item_count;
-      printf("%s\n", item.ToString().c_str());
-      if (item.part_range_begin > cur_min) {
-        printf("partition point: %.4f (%.1f KB)\n", item.part_range_begin,
-               cur_count * 60.0 / 1e6);
-        cur_min = item.part_range_begin;
-        cur_count = item.part_item_count;
-        //        sorter.FlushUntil(cur_min);
-      }
+    PartitionedRun(const PartitionedRun& rhs)
+        : items(rhs.items.begin(), rhs.items.end()),
+          partition_point(rhs.partition_point) {}
 
-      sorter.AddItem(item);
+    void SortByKey() {
+      std::sort(items.begin(), items.end(), PMIRangeComparator());
     }
 
-    sorter.FlushAll();
+    void SortByOffset() {
+      std::sort(items.begin(), items.end(), PMIOffsetComparator());
+    }
+
+    void Empty() { items.resize(0); }
+  };
+
+  typedef std::map<int, std::vector<PartitionedRun>> EpochRunMap;
+
+  bool MemoryFootprintExceeded(uint64_t item_cnt) const {
+    return (item_cnt * val_sz_ > kMemMax);
   }
 
+  Status MergeAll();
+  Status ComputeRuns(EpochRunMap& run_map);
+  Status ComputeRunsForEpoch(std::vector<PartitionedRun>& runs, int epoch,
+                             size_t& mf_idx);
   std::string CreateDestDir() {
     std::string dest = options_.data_path;
     if (dest[dest.size() - 1] == '/') dest.resize(dest.size() - 1);
