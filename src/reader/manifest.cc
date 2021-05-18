@@ -18,8 +18,11 @@ int PartitionManifest::GetOverLappingEntries(int epoch, float point,
     }
   }
 
+  uint64_t mass_epoch = mass_epoch_[epoch];
+
   assert(sizes_set_);
   match.SetKVSizes(key_sz_, val_sz_);
+  match.SetDataSize(mass_epoch);
 
   return 0;
 }
@@ -42,6 +45,7 @@ int PartitionManifest::GetOverLappingEntries(int epoch, float range_begin,
 
   assert(sizes_set_);
   match.SetKVSizes(key_sz_, val_sz_);
+  match.SetDataSize(mass_epoch);
 
   return 0;
 }

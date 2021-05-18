@@ -31,7 +31,8 @@ class RangeReaderPerfLogger {
     logf(LOG_INFO, "Event TOTAL: %.2lf ms\n", intvl_total * 1e-3);
   }
 
-  Status LogQuery(const char* dir_path, int epoch, float qbeg, float qend) {
+  Status LogQuery(const char* dir_path, int epoch, float qbeg, float qend,
+                  float qsel) {
     const char* events[] = {"SSTREAD", "SORT"};
     size_t n_events = sizeof(events) / sizeof(char*);
 
@@ -47,8 +48,8 @@ class RangeReaderPerfLogger {
     }
 
     char log_buf[1024];
-    size_t log_bufsz = snprintf(log_buf, 1024, "%s,%d,%f,%f,%s\n", dir_path,
-                                epoch, qbeg, qend, ts_str.c_str());
+    size_t log_bufsz = snprintf(log_buf, 1024, "%s,%d,%f,%f,%f,%s\n", dir_path,
+                                epoch, qbeg, qend, qsel, ts_str.c_str());
     Slice log_sl(log_buf, log_bufsz);
     Status s = WriteStringToFile(env_, log_sl, "query.log");
 

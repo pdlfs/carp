@@ -133,7 +133,7 @@ struct PMIOffsetComparator {
 class PartitionManifestMatch {
  public:
   PartitionManifestMatch()
-      : mass_total_(0), mass_oob_(0), key_sz_(0), val_sz_(0){};
+      : mass_data_(0), mass_total_(0), mass_oob_(0), key_sz_(0), val_sz_(0){};
 
   void AddItem(PartitionManifestItem& item) {
     items_.push_back(item);
@@ -166,6 +166,10 @@ class PartitionManifestMatch {
 
   uint64_t TotalMass() { return mass_total_; }
 
+  float GetSelectivity() const {
+    return mass_data_ ? mass_total_ * 1.0 / mass_data_ : 0;
+  }
+
   void GetKVSizes(uint64_t& key_sz, uint64_t& val_sz) {
     key_sz = key_sz_;
     val_sz = val_sz_;
@@ -178,6 +182,8 @@ class PartitionManifestMatch {
   void Print();
 
  private:
+  void SetDataSize(size_t data_sz) {}
+
   void SetKVSizes(uint64_t key_sz, uint64_t val_sz) {
     key_sz_ = key_sz;
     val_sz_ = val_sz;
@@ -185,6 +191,7 @@ class PartitionManifestMatch {
 
   std::vector<PartitionManifestItem> items_;
   std::map<int, std::vector<size_t> > ranks_;
+  uint64_t mass_data_;
   uint64_t mass_total_;
   uint64_t mass_oob_;
   uint64_t key_sz_;

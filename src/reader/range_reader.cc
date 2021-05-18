@@ -143,8 +143,10 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
          ITEM(10), ITEM(50), ITEM(100));
   }
 
+  double qsel = match_obj.GetSelectivity();
+
   logger_.PrintStats();
-  logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend);
+  logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend, qsel);
 
   return Status::OK();
 }
