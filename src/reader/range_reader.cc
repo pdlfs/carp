@@ -83,12 +83,12 @@ Status RangeReader::SummarizeManifest() {
          ep_range.range_min, ep_range.range_max, ep_itemcnt);
 
     std::string print_buf_concat;
-    for (float qpnt = 0.1; qpnt < 2; qpnt += 0.25) {
+    for (float qpnt = 0.01; qpnt < 2; qpnt += 0.25) {
       PartitionManifestMatch match;
       manifest_.GetOverLappingEntries(ep, qpnt, match);
 
       char print_buf[64];
-      snprintf(print_buf, 64, "%.3f (%.1f%%), ", qpnt, match.TotalMass(),
+      snprintf(print_buf, 64, "%.3f (%.3%%), ", qpnt, match.TotalMass(),
                match.TotalMass() * 100.0 / ep_itemcnt);
 
       print_buf_concat += print_buf;

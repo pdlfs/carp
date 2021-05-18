@@ -47,7 +47,7 @@ class RangeReaderPerfLogger {
     }
 
     char log_buf[1024];
-    size_t log_bufsz = snprintf(log_buf, 1024, "%s,%d,%f,%f,%s", dir_path,
+    size_t log_bufsz = snprintf(log_buf, 1024, "%s,%d,%f,%f,%s\n", dir_path,
                                 epoch, qbeg, qend, ts_str.c_str());
     Slice log_sl(log_buf, log_bufsz);
     Status s = WriteStringToFile(env_, log_sl, "query.log");
