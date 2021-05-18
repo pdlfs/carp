@@ -57,6 +57,57 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
   return s;
 }
 
+Status RangeReader::SummarizeManifest() {
+  Status s = Status::OK();
+
+  manifest_.SortByKey();
+
+  int epcnt;
+  s = manifest_.GetEpochCount(epcnt);
+  if (!s.ok()) return s;
+
+  logf(LOG_INFO, "Total Epochs: %d\n", epcnt);
+
+  for (int ep = 0; ep < epcnt; ep++) {
+    Range ep_range;
+    s = manifest_.GetEpochRange(ep, ep_range);
+    if (!s.ok()) return s;
+
+    uint64_t ep_itemcnt;
+    s = manifest_.GetEpochMass(ep, ep_itemcnt);
+    if (!s.ok()) return s;
+
+    if (ep_itemcnt == 0u) continue;
+
+    logf(LOG_INFO, "Epoch %d: %.1f to %.1f (%" PRIu64 " items)", ep,
+         ep_range.range_min, ep_range.range_max, ep_itemcnt);
+
+    std::string print_buf_concat;
+    for (float qpnt = 0.1; qpnt < 2; qpnt += 0.25) {
+      PartitionManifestMatch match;
+      manifest_.GetOverLappingEntries(ep, qpnt, match);
+
+      char print_buf[64];
+      snprintf(print_buf, 64, "%.3f (%.1f%%), ", qpnt, match.TotalMass(),
+               match.TotalMass() * 100.0 / ep_itemcnt);
+
+      print_buf_concat += print_buf;
+      if (print_buf_concat.size() > 60u) {
+        logf(LOG_INFO, "%s", print_buf_concat.c_str());
+        print_buf_concat = "";
+      }
+    }
+
+    if (print_buf_concat.size()) {
+      logf(LOG_INFO, "%s", print_buf_concat.c_str());
+      print_buf_concat = "";
+    }
+  }
+
+  logger_.PrintStats();
+  return s;
+}
+
 Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
 

@@ -20,7 +20,7 @@ TEST(ReaderTest, PlfsTest) {
   std::string dir = "/tmp/particle";
   PlfsWrapper writer;
 
-  s = writer.OpenDir(dir.c_str());
+  s = writer.OpenDir(dir.c_str(), 0);
   ASSERT_TRUE(s.ok());
 
   s = writer.EpochFlush();

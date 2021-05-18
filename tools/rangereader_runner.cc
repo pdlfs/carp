@@ -141,6 +141,9 @@ int main(int argc, char* argv[]) {
   } else if (options.query_batch) {
     printf("Batch Queries not implemented\n");
     exit(EXIT_FAILURE);
+  } else {
+    reader.SummarizeManifest();
   }
+
   return 0;
 }

@@ -80,6 +80,8 @@ class RangeReader {
 
   Status ReadManifest(const std::string& dir_path);
 
+  Status SummarizeManifest();
+
   Status QueryParallel(int epoch, float rbegin, float rend);
 
   Status Query(int epoch, float rbegin, float rend);
