@@ -29,7 +29,7 @@ static std::string gen_plfsdir_conf(pdlfs::plfsio::PlfsOpts& dirc, int rank) {
 namespace pdlfs {
 namespace plfsio {
 
-Status PlfsWrapper::OpenDir(const char* path) {
+Status PlfsWrapper::OpenDir(const char* path, int rank) {
   Status s = Status::OK();
 
   opts_.key_size = 4;
@@ -48,16 +48,16 @@ Status PlfsWrapper::OpenDir(const char* path) {
   opts_.pre_flushing_wait = 0;
   opts_.pre_flushing_sync = 0;
 
-  OpenDirInternal(path);
+  OpenDirInternal(path, rank);
   return s;
 }
 
-Status PlfsWrapper::OpenDirInternal(const char* path) {
+Status PlfsWrapper::OpenDirInternal(const char* path, int rank) {
   Status s = Status::OK();
   int rv = 0;
 
   std::string conf;
-  conf = gen_plfsdir_conf(opts_, /*rank*/ 0);
+  conf = gen_plfsdir_conf(opts_, /*rank*/ rank);
   plfshdl_ =
       deltafs_plfsdir_create_handle(conf.c_str(), O_WRONLY, opts_.io_engine);
   deltafs_plfsdir_set_fixed_kv(plfshdl_, 1);

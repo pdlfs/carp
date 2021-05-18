@@ -7,6 +7,7 @@
 #include "carp/manifest.h"
 #include "file_cache.h"
 #include "plfs_wrapper.h"
+#include "plfs_writer.h"
 
 #include <queue>
 
@@ -139,7 +140,7 @@ class SlidingSorter {
   std::vector<size_t> rank_cursors_;
   std::priority_queue<KVItem, std::vector<KVItem>, std::greater<KVItem> >
       merge_pool_;
-  PlfsWrapper plfs_;
+  PlfsWriter plfs_;
 };
 }  // namespace plfsio
 }  // namespace pdlfs

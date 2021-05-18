@@ -38,7 +38,7 @@ class PlfsWrapper {
         plfsenv_(nullptr),
         plfshdl_(nullptr) {}
 
-  Status OpenDir(const char* path);
+  Status OpenDir(const char* path, int rank);
 
   bool IsOpen() const { return plfshdl_ != nullptr; }
 
@@ -122,7 +122,7 @@ class PlfsWrapper {
   }
 
  private:
-  Status OpenDirInternal(const char* path);
+  Status OpenDirInternal(const char* path, int rank);
 
   PlfsOpts opts_;
   int epoch_;
