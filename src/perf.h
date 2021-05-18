@@ -31,7 +31,40 @@ class RangeReaderPerfLogger {
     logf(LOG_INFO, "Event TOTAL: %.2lf ms\n", intvl_total * 1e-3);
   }
 
+  Status LogQuery(const char* dir_path, int epoch, float qbeg, float qend) {
+    const char* events[] = {"SSTREAD", "SORT"};
+    size_t n_events = sizeof(events) / sizeof(char*);
+
+    std::string ts_str;
+
+    for (size_t i = 0; i < n_events; i++) {
+      uint64_t event_delta = GetEventDelta(events[i]);
+      if (ts_str.size()) {
+        ts_str += ",";
+      }
+
+      ts_str += std::to_string(event_delta);
+    }
+
+    char log_buf[1024];
+    size_t log_bufsz = snprintf(log_buf, 1024, "%s,%d,%f,%f,%s", dir_path,
+                                epoch, qbeg, qend, ts_str.c_str());
+    Slice log_sl(log_buf, log_bufsz);
+    Status s = WriteStringToFile(env_, log_sl, "query.log");
+
+    return s;
+  }
+
  private:
+  uint64_t GetEventDelta(const char* event) {
+    uint64_t res = 0;
+#define MAP_HAS(m, k) ((m).find(k) != (m).end())
+    if (MAP_HAS(ts_begin_, event) and MAP_HAS(ts_end_, event)) {
+      res = ts_end_[event] - ts_begin_[event];
+    }
+#undef MAP_HAS
+    return res;
+  }
   Env* const env_;
   std::map<const char*, uint64_t> ts_begin_;
   std::map<const char*, uint64_t> ts_end_;

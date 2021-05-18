@@ -2,7 +2,7 @@
 // Created by Ankush on 5/14/2021.
 //
 
-#include "reader/FmtChecker.h"
+#include "reader/fmt_checker.h"
 
 #include <stdio.h>
 

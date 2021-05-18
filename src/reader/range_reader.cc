@@ -144,6 +144,7 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
   }
 
   logger_.PrintStats();
+  logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend);
 
   return Status::OK();
 }

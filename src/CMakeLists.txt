@@ -37,7 +37,7 @@ set(CARP_VERSION "${carp-vers}.${CARP_VERSION_PATCH}")
 configure_file("../include/carp/carp_config.h.in"
         "../include/carp/carp_config.h" @ONLY)
 
-set(carp-all-srcs ${carp-io-srcs} ${carp-nw-srcs} common.cc reader/FmtChecker.cc reader/FmtChecker.h)
+set(carp-all-srcs ${carp-io-srcs} ${carp-nw-srcs} common.cc reader/fmt_checker.cc reader/fmt_checker.h)
 
 add_library(carp ${carp-all-srcs})
 target_include_directories(carp PUBLIC $<INSTALL_INTERFACE:include>)
