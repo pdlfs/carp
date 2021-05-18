@@ -93,7 +93,9 @@ class PlfsWriter {
   int rank_;
   int epoch_;
   uint64_t cur_rank_wrcnt_;
-  static const uint64_t kMaxRankWrcnt = 20000000;
+#define MILLION(n) (1000000 * (n))
+  static const uint64_t kMaxRankWrcnt = MILLION(200);
+#undef MILLION
   PlfsWrapper* plfs_;
 };
 }  // namespace plfsio
