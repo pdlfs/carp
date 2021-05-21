@@ -182,7 +182,7 @@ class PartitionManifestMatch {
   void Print();
 
  private:
-  void SetDataSize(size_t data_sz) {}
+  void SetDataSize(size_t data_sz) { mass_data_ = data_sz; }
 
   void SetKVSizes(uint64_t key_sz, uint64_t val_sz) {
     key_sz_ = key_sz;
