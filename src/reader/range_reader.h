@@ -80,17 +80,14 @@ class RangeReader {
 
   Status ReadManifest(const std::string& dir_path);
 
-  Status SummarizeManifest();
-
   Status QueryParallel(int epoch, float rbegin, float rend);
 
   Status Query(int epoch, float rbegin, float rend);
 
+  Status AnalyzeManifest(const std::string& dir_path);
+
  private:
   static void ManifestReadWorker(void* arg);
-
-  static Status ReadFooter(RandomAccessFile* fh, uint64_t fsz,
-                           ParsedFooter& pf);
 
   Status ReadSSTs(PartitionManifestMatch& match,
                   std::vector<KeyPair>& query_results);

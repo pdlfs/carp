@@ -6,6 +6,8 @@
 
 #include <map>
 
+#define MICROS(us) ((us)*1e-3)
+
 namespace pdlfs {
 namespace plfsio {
 class RangeReaderPerfLogger {
@@ -22,13 +24,16 @@ class RangeReaderPerfLogger {
     uint64_t intvl_total = 0;
 
     for (; it != ts_begin_.end(); it++) {
-      const char* key = it->first;
-      uint64_t intvl_us = ts_end_[key] - ts_begin_[key];
-      intvl_total += intvl_us;
-
-      logf(LOG_INFO, "Event %s: %.2lf ms\n", it->first, intvl_us * 1e-3);
+      intvl_total += PrintSingleStat(it->first);
     }
-    logf(LOG_INFO, "Event TOTAL: %.2lf ms\n", intvl_total * 1e-3);
+
+    logf(LOG_INFO, "Event TOTAL: %.2lf ms\n", MICROS(intvl_total));
+  }
+
+  uint64_t PrintSingleStat(const char* evt_name) {
+    uint64_t event_delta_us = GetEventDelta(evt_name);
+    logf(LOG_INFO, "Event %s: %.2lf ms\n", evt_name, MICROS(event_delta_us));
+    return event_delta_us;
   }
 
   Status LogQuery(const char* dir_path, int epoch, float qbeg, float qend,

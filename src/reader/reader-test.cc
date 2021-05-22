@@ -42,6 +42,14 @@ TEST(ReaderTest, PlfsTest) {
   ASSERT_TRUE(s.ok());
 }
 
+TEST(ReaderTest, QuerySanityCheck) {
+  Query q1(0, 0.5, 10);
+  Query q2 (0, 0, 1);
+  ASSERT_TRUE(q1.Overlaps(q2));
+
+  Query q3(1, 1, 2);
+  ASSERT_FALSE(q3.Overlaps(q2));
+}
 }  // namespace plfsio
 }  // namespace pdlfs
 

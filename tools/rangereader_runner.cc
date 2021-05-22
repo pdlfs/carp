@@ -134,15 +134,15 @@ int main(int argc, char* argv[]) {
   }
 
   pdlfs::plfsio::RangeReader reader(options);
-  reader.ReadManifest(options.data_path);
   if (options.query_on) {
+    reader.ReadManifest(options.data_path);
     reader.QueryParallel(options.query_epoch, options.query_begin,
                          options.query_end);
   } else if (options.query_batch) {
     printf("Batch Queries not implemented\n");
     exit(EXIT_FAILURE);
   } else {
-    reader.SummarizeManifest();
+    reader.AnalyzeManifest(options.data_path);
   }
 
   return 0;

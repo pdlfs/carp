@@ -109,9 +109,9 @@ Status Compactor::ComputeRunsForEpoch(std::vector<PartitionedRun>& runs,
       return s;
     }
 
-    if ((item.part_range_begin > cur_min) and
+    if ((item.observed.range_min > cur_min) and
         MemoryFootprintExceeded(cur_count)) {
-      cur_min = item.part_range_begin;
+      cur_min = item.observed.range_min;
       cur_count = 0;
 
       cur_run.partition_point = cur_min;

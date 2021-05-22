@@ -4,6 +4,7 @@
 
 #include "range_reader.h"
 
+#include "query_utils.h"
 #include "reader_base.h"
 
 namespace pdlfs {
@@ -54,57 +55,6 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
     if (s.ok()) manifest_.GenOverlapStats(exp_path.c_str(), env);
   }
 
-  return s;
-}
-
-Status RangeReader::SummarizeManifest() {
-  Status s = Status::OK();
-
-  manifest_.SortByKey();
-
-  int epcnt;
-  s = manifest_.GetEpochCount(epcnt);
-  if (!s.ok()) return s;
-
-  logf(LOG_INFO, "Total Epochs: %d\n", epcnt);
-
-  for (int ep = 0; ep < epcnt; ep++) {
-    Range ep_range;
-    s = manifest_.GetEpochRange(ep, ep_range);
-    if (!s.ok()) return s;
-
-    uint64_t ep_itemcnt;
-    s = manifest_.GetEpochMass(ep, ep_itemcnt);
-    if (!s.ok()) return s;
-
-    if (ep_itemcnt == 0u) continue;
-
-    logf(LOG_INFO, "Epoch %d: %.1f to %.1f (%" PRIu64 " items)", ep,
-         ep_range.range_min, ep_range.range_max, ep_itemcnt);
-
-    std::string print_buf_concat;
-    for (float qpnt = 0.01; qpnt < 2; qpnt += 0.25) {
-      PartitionManifestMatch match;
-      manifest_.GetOverLappingEntries(ep, qpnt, match);
-
-      char print_buf[64];
-      snprintf(print_buf, 64, "%.3f (%.3%%), ", qpnt, match.TotalMass(),
-               match.TotalMass() * 100.0 / ep_itemcnt);
-
-      print_buf_concat += print_buf;
-      if (print_buf_concat.size() > 60u) {
-        logf(LOG_INFO, "%s", print_buf_concat.c_str());
-        print_buf_concat = "";
-      }
-    }
-
-    if (print_buf_concat.size()) {
-      logf(LOG_INFO, "%s", print_buf_concat.c_str());
-      print_buf_concat = "";
-    }
-  }
-
-  logger_.PrintStats();
   return s;
 }
 
@@ -186,6 +136,19 @@ Status RangeReader::Query(int epoch, float rbegin, float rend) {
   return Status::OK();
 }
 
+Status RangeReader::AnalyzeManifest(const std::string& dir_path) {
+  Status s = Status::OK();
+  s = ReadManifest(dir_path);
+  if (!s.ok()) return s;
+
+  logger_.PrintSingleStat("MFREAD");
+
+  QueryUtils::SummarizeManifest(manifest_);
+  QueryUtils::QueryPlan(manifest_);
+
+  return s;
+}
+
 void RangeReader::ManifestReadWorker(void* arg) {
   ManifestReadWorkItem* item = static_cast<ManifestReadWorkItem*>(arg);
 
@@ -201,29 +164,6 @@ void RangeReader::ManifestReadWorker(void* arg) {
   item->manifest_reader->ReadManifest(item->rank, pf.manifest_data,
                                       pf.manifest_sz);
   item->task_tracker->MarkCompleted();
-}
-
-Status RangeReader::ReadFooter(RandomAccessFile* fh, uint64_t fsz,
-                               ParsedFooter& pf) {
-  static const uint64_t footer_sz = 28;
-  Slice s;
-  std::string scratch;
-  scratch.resize(footer_sz);
-  Status status = fh->Read(fsz - footer_sz, footer_sz, &s, &scratch[0]);
-
-  pf.num_epochs = DecodeFixed32(&s[0]);
-  pf.manifest_sz = DecodeFixed64(&s[4]);
-  pf.key_sz = DecodeFixed64(&s[12]);
-  pf.val_sz = DecodeFixed64(&s[20]);
-
-  logf(LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs, pf.manifest_sz,
-       pf.key_sz, pf.val_sz);
-
-  scratch.resize(pf.manifest_sz);
-  status = fh->Read(fsz - pf.manifest_sz - footer_sz, pf.manifest_sz,
-                    &pf.manifest_data, &scratch[0]);
-
-  return status;
 }
 
 Status RangeReader::ReadSSTs(PartitionManifestMatch& match,

@@ -53,8 +53,8 @@ class FmtChecker : public ReaderBase {
   static bool ValidateSST(PartitionManifestItem meta, Slice& data) {
     const float* key_blk = (const float*)data.data();
     uint64_t item_cnt = meta.part_item_count;
-    float rbeg = meta.part_range_begin;
-    float rend = meta.part_range_end;
+    float rbeg = meta.observed.range_min;
+    float rend = meta.observed.range_max;
 
     for (uint64_t i = 0; i < item_cnt; i += 1000) {
       if (key_blk[i] < rbeg || key_blk[i] > rend) {
@@ -70,8 +70,8 @@ class FmtChecker : public ReaderBase {
     const float* key_blk = (const float*)data.data();
 
     uint64_t item_cnt = meta.part_item_count;
-    float rbeg = meta.part_range_begin;
-    float rend = meta.part_range_end;
+    float rbeg = meta.observed.range_min;
+    float rend = meta.observed.range_max;
 
     for (uint64_t i = 0; i < item_cnt; i += 1000) {
       if (key_blk[i] < rbeg || key_blk[i] > rend) {

@@ -22,11 +22,23 @@ struct Range {
 
   Range() : range_min(FLT_MAX), range_max(FLT_MIN) {}
 
-  Range& operator=(Range& r) {
-    range_min = r.range_min;
-    range_max = r.range_max;
-    return *this;
+  Range(float rmin, float rmax) : range_min(rmin), range_max(rmax) {}
+
+  bool Overlaps(float point) const {
+    return point >= range_min and point <= range_max;
   }
+
+  bool Overlaps(float rmin, float rmax) const {
+    return Overlaps(rmin) or Overlaps(rmax) or
+           ((rmin < range_min) and (rmax > range_max));
+  }
+
+  bool Overlaps(const Range& r) const {
+    return Overlaps(r.range_max) or Overlaps(r.range_max) or
+           ((r.range_min < range_min) and (r.range_max > range_max));
+  }
+
+  bool ZeroWidth() const { return range_min == range_max; }
 
   void Reset() {
     range_min = FLT_MAX;
@@ -45,64 +57,64 @@ struct Range {
     range_max = std::max(range_max, f);
   }
 
-  void Extend(float beg, float end) {
-    assert(beg <= end);
-    range_min = std::min(range_min, beg);
-    range_max = std::max(range_max, end);
+  void Extend(const Range& r) {
+    assert(r.IsValid());
+    range_min = std::min(range_min, r.range_min);
+    range_max = std::max(range_max, r.range_max);
   }
+};
+
+class Query {
+ private:
+  int epoch_;
+  Range range_;
+
+ public:
+  Query(int epoch, float rmin, float rmax)
+      : epoch_(epoch), range_(rmin, rmax) {}
+
+  bool Overlaps(const Query& rhs) {
+    return (epoch_ == rhs.epoch_) and range_.Overlaps(rhs.range_);
+  };
 };
 
 struct PartitionManifestItem {
   int epoch;
   int rank;
   uint64_t offset;
-  float part_range_begin;
-  float part_range_end;
-  float part_expected_begin;
-  float part_expected_end;
+  Range observed;
+  Range expected;
   uint32_t updcnt;
   uint32_t part_item_count;
   uint32_t part_item_oob;
 
-  bool Overlaps(float point) const {
-    return point >= part_range_begin and point <= part_range_end;
-  }
+  bool Overlaps(float point) const { return observed.Overlaps(point); }
   bool Overlaps(float range_begin, float range_end) const {
-    return Overlaps(range_begin) or Overlaps(range_end) or
-           ((range_begin < part_range_begin) and (range_end > part_range_end));
+    return observed.Overlaps(Range(range_begin, range_end));
   }
 
-  bool operator<(const PartitionManifestItem& rhs) const {
-#define PROPLT(x) (x < rhs.x)
-#define PROPEQ(x) (x == rhs.x)
-    return (PROPLT(epoch) || (PROPEQ(epoch) && PROPLT(part_range_begin)) ||
-            (PROPEQ(epoch) && PROPEQ(part_range_begin) && PROPLT(offset)));
-#undef PROPLT
-#undef PROPEQ
-  }
-
-  std::string ToString() {
+  std::string ToString() const {
     char buf[1024];
     // clang-format off
     snprintf(buf, 1024,
              "[EPOCH %d][%10llu]\t%.3f -> %.3f\t"
              "(Expected: %.3f to %.3f, Rank %d, %u items, %u OOB, Round %u)",
-             epoch, offset, part_range_begin, part_range_end,
-             part_expected_begin, part_expected_end, rank, part_item_count,
+             epoch, offset, observed.range_min, observed.range_max,
+             expected.range_min, expected.range_max, rank, part_item_count,
              part_item_oob, updcnt);
     // clang-format on
     return buf;
   }
 
-  std::string ToCSVString() {
+  std::string ToCSVString() const {
     // clang-format off
     char buf[1024];
     snprintf(buf, 1024,
              "%d,%" PRIu64 ",%f,%f,%f,%f," /* ranges */
              "%u,%u,%u", /* counts */
              epoch, offset, 
-             part_range_begin, part_range_end, 
-             part_expected_begin, part_expected_end, 
+             observed.range_min, observed.range_max,
+             expected.range_min, expected.range_max,
              part_item_count, part_item_oob, updcnt);
     // clang-format on
     return buf;
@@ -114,9 +126,9 @@ struct PartitionManifestItem {
 struct PMIRangeComparator {
   bool operator()(const PartitionManifestItem& lhs,
                   const PartitionManifestItem& rhs) const {
-    return (
-        PROPLT(epoch) || (PROPEQ(epoch) && PROPLT(part_range_begin)) ||
-        (PROPEQ(epoch) && PROPEQ(part_range_begin) && PROPLT(part_range_end)));
+    return (PROPLT(epoch) || (PROPEQ(epoch) && PROPLT(observed.range_min)) ||
+            (PROPEQ(epoch) && PROPEQ(observed.range_min) &&
+             PROPLT(observed.range_max)));
   }
 };
 
@@ -167,10 +179,10 @@ class PartitionManifestMatch {
   uint64_t TotalMass() { return mass_total_; }
 
   float GetSelectivity() const {
-    return mass_data_ ? mass_total_ * 1.0 / mass_data_ : 0;
+    return mass_data_ ? mass_total_ * 2.0f / mass_data_ : 0;
   }
 
-  void GetKVSizes(uint64_t& key_sz, uint64_t& val_sz) {
+  void GetKVSizes(uint64_t& key_sz, uint64_t& val_sz) const {
     key_sz = key_sz_;
     val_sz = val_sz_;
   }
@@ -282,7 +294,7 @@ class PartitionManifest {
     items_.push_back(item);
     mass_total_ += item.part_item_count;
 
-    if (item.part_range_begin == item.part_range_end) {
+    if (item.observed.ZeroWidth()) {
       zero_sst_cnt_++;
     }
 
@@ -293,7 +305,7 @@ class PartitionManifest {
     }
 
     mass_epoch_[item.epoch] += item.part_item_count;
-    range_epoch_[item.epoch].Extend(item.part_range_begin, item.part_range_end);
+    range_epoch_[item.epoch].Extend(item.observed);
   }
 
   Status UpdateKVSizes(const uint64_t key_sz, const uint64_t val_sz) {
