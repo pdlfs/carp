@@ -43,8 +43,8 @@ class QueryUtils {
         manifest.GetOverlappingEntries(ep, qpnt, match);
 
         char print_buf[64];
-        snprintf(print_buf, 64, "%.3f (%.3%%), ", qpnt, match.TotalMass(),
-                 match.TotalMass() * 100.0 / ep_itemcnt);
+        snprintf(print_buf, 64, "%.3f (%.3f%%), ", qpnt,
+                 match.GetSelectivity() * 100);
 
         print_buf_concat += print_buf;
         if (print_buf_concat.size() > 60u) {
