@@ -64,18 +64,24 @@ struct Range {
   }
 };
 
-class Query {
- private:
-  int epoch_;
-  Range range_;
-
+struct Query {
  public:
-  Query(int epoch, float rmin, float rmax)
-      : epoch_(epoch), range_(rmin, rmax) {}
+  int epoch;
+  Range range;
 
-  bool Overlaps(const Query& rhs) {
-    return (epoch_ == rhs.epoch_) and range_.Overlaps(rhs.range_);
+  Query(int epoch, float rmin, float rmax) : epoch(epoch), range(rmin, rmax) {}
+
+  bool Overlaps(const Query& rhs) const {
+    return (epoch == rhs.epoch) and range.Overlaps(rhs.range);
   };
+
+  std::string ToString() const {
+    size_t buf_sz = 1024;
+    char buf[buf_sz];
+    snprintf(buf, buf_sz, "[Query] [Epoch %d] %.3f to %.3f", epoch,
+             range.range_min, range.range_max);
+    return std::string(buf);
+  }
 };
 
 struct PartitionManifestItem {
@@ -92,6 +98,7 @@ struct PartitionManifestItem {
   bool Overlaps(float range_begin, float range_end) const {
     return observed.Overlaps(Range(range_begin, range_end));
   }
+  bool Overlaps(const Range& r) const { return observed.Overlaps(r); }
 
   std::string ToString() const {
     char buf[1024];
@@ -176,10 +183,10 @@ class PartitionManifestMatch {
     return mass_rank;
   }
 
-  uint64_t TotalMass() { return mass_total_; }
+  uint64_t TotalMass() const { return mass_total_; }
 
   float GetSelectivity() const {
-    return mass_data_ ? mass_total_ * 2.0f / mass_data_ : 0;
+    return mass_data_ ? mass_total_ * 1.0f / mass_data_ : 0;
   }
 
   void GetKVSizes(uint64_t& key_sz, uint64_t& val_sz) const {
@@ -187,9 +194,19 @@ class PartitionManifestMatch {
     val_sz = val_sz_;
   }
 
-  uint64_t Size() { return items_.size(); }
+  uint64_t Size() const { return items_.size(); }
 
   PartitionManifestItem& operator[](size_t i) { return this->items_[i]; }
+
+  std::string ToString() const {
+    size_t buf_sz = 1024;
+    char buf[buf_sz];
+
+    snprintf(buf, buf_sz, "%.3f%% selectivity (%" PRIu64 " items)",
+             GetSelectivity()*100, TotalMass());
+
+    return std::string(buf);
+  }
 
   void Print();
 
@@ -223,11 +240,13 @@ class PartitionManifest {
         val_sz_(0),
         zero_sst_cnt_(0) {}
 
-  int GetOverLappingEntries(int epoch, float point,
+  int GetOverlappingEntries(int epoch, float point,
                             PartitionManifestMatch& match);
 
-  int GetOverLappingEntries(int epoch, float range_begin, float range_end,
+  int GetOverlappingEntries(int epoch, float range_begin, float range_end,
                             PartitionManifestMatch& match);
+
+  int GetOverlappingEntries(Query& q, PartitionManifestMatch& match);
 
   Status GenOverlapStats(const char* dir_path, Env* env);
 

@@ -38,6 +38,8 @@ class RangeReaderPerfLogger {
 
   Status LogQuery(const char* dir_path, int epoch, float qbeg, float qend,
                   float qsel) {
+    Status s = Status::OK();
+
     const char* events[] = {"SSTREAD", "SORT"};
     size_t n_events = sizeof(events) / sizeof(char*);
 
@@ -45,7 +47,7 @@ class RangeReaderPerfLogger {
 
     for (size_t i = 0; i < n_events; i++) {
       uint64_t event_delta = GetEventDelta(events[i]);
-      if (ts_str.size()) {
+      if (!ts_str.empty()) {
         ts_str += ",";
       }
 
@@ -55,13 +57,22 @@ class RangeReaderPerfLogger {
     char log_buf[1024];
     size_t log_bufsz = snprintf(log_buf, 1024, "%s,%d,%f,%f,%f,%s\n", dir_path,
                                 epoch, qbeg, qend, qsel, ts_str.c_str());
-    FILE* f = fopen("query.log", "a+");
-    fwrite(log_buf, log_bufsz, 1, f);
-    fclose(f);
-    // Slice log_sl(log_buf, log_bufsz);
-    // Status s = WriteStringToFile(env_, log_sl, "query.log");
 
-    return Status::OK();
+    /* ugly, but pdlfs::env doesn't support appendable files yet? */
+    const char* const kQueryFname = "querylog.csv";
+    std::string data;
+    if (env_->FileExists(kQueryFname)) {
+      s = ReadFileToString(env_, kQueryFname, &data);
+      if (!s.ok()) return s;
+    } else {
+      data = "plfspath,epoch,qbegin,qend,qselectivity,qreadus,qsortus\n";
+    }
+
+    data += std::string(log_buf, log_bufsz);
+    Slice log_sl(data);
+    s = WriteStringToFile(env_, log_sl, kQueryFname);
+
+    return s;
   }
 
  private:

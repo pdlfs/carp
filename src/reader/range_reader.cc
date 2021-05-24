@@ -4,6 +4,7 @@
 
 #include "range_reader.h"
 
+#include "carp/manifest.h"
 #include "query_utils.h"
 #include "reader_base.h"
 
@@ -58,11 +59,15 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
   return s;
 }
 
+Status RangeReader::QueryParallel(Query q) {
+  return QueryParallel(q.epoch, q.range.range_min, q.range.range_max);
+}
+
 Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
 
   PartitionManifestMatch match_obj;
-  manifest_.GetOverLappingEntries(epoch, rbegin, rend, match_obj);
+  manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj);
 
   logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
        match_obj.TotalMass());
@@ -100,11 +105,11 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
 
   return Status::OK();
 }
-Status RangeReader::Query(int epoch, float rbegin, float rend) {
+Status RangeReader::QuerySequential(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
 
   PartitionManifestMatch match_obj;
-  manifest_.GetOverLappingEntries(epoch, rbegin, rend, match_obj);
+  manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj);
   logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
        match_obj.TotalMass());
 
@@ -144,7 +149,19 @@ Status RangeReader::AnalyzeManifest(const std::string& dir_path) {
   logger_.PrintSingleStat("MFREAD");
 
   QueryUtils::SummarizeManifest(manifest_);
-  QueryUtils::QueryPlan(manifest_);
+
+  std::vector<Query> queries;
+  s = QueryUtils::GenQueryPlan(manifest_, queries);
+  if (!s.ok()) return s;
+
+  for (size_t qi = 0; qi < queries.size(); qi++) {
+    Query& q = queries[qi];
+    PartitionManifestMatch match;
+    manifest_.GetOverlappingEntries(q, match);
+
+    logf(LOG_INFO, "%s: %s", q.ToString().c_str(), match.ToString().c_str());
+//    QueryParallel(q);
+  }
 
   return s;
 }

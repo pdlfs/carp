@@ -10,7 +10,7 @@
 
 namespace pdlfs {
 namespace plfsio {
-int PartitionManifest::GetOverLappingEntries(int epoch, float point,
+int PartitionManifest::GetOverlappingEntries(int epoch, float point,
                                              PartitionManifestMatch& match) {
   for (size_t i = 0; i < items_.size(); i++) {
     if (items_[i].epoch == epoch && items_[i].Overlaps(point)) {
@@ -27,7 +27,7 @@ int PartitionManifest::GetOverLappingEntries(int epoch, float point,
   return 0;
 }
 
-int PartitionManifest::GetOverLappingEntries(int epoch, float range_begin,
+int PartitionManifest::GetOverlappingEntries(int epoch, float range_begin,
                                              float range_end,
                                              PartitionManifestMatch& match) {
   for (size_t i = 0; i < items_.size(); i++) {
@@ -42,6 +42,25 @@ int PartitionManifest::GetOverLappingEntries(int epoch, float range_begin,
 
   logf(LOG_INFO, "Query Selectivity: %.4f %% (%lu items, %lu total)\n",
        mass_match * 100.0 / mass_epoch, mass_match, mass_epoch);
+
+  assert(sizes_set_);
+  match.SetKVSizes(key_sz_, val_sz_);
+  match.SetDataSize(mass_epoch);
+
+  return 0;
+}
+
+int PartitionManifest::GetOverlappingEntries(Query& q,
+                                             PartitionManifestMatch& match) {
+  for (size_t i = 0; i < items_.size(); i++) {
+    if (items_[i].epoch == q.epoch &&
+        items_[i].Overlaps(q.range)) {
+      match.AddItem(items_[i]);
+    }
+  }
+
+  uint64_t mass_epoch = mass_epoch_[q.epoch];
+  uint64_t mass_match = match.TotalMass();
 
   assert(sizes_set_);
   match.SetKVSizes(key_sz_, val_sz_);
@@ -117,7 +136,7 @@ void PartitionManifest::GenEpochStatsCSV(const int epoch,
   for (size_t i = 0; i < probe_points.size(); i++) {
     float r = probe_points[i];
     PartitionManifestMatch match;
-    GetOverLappingEntries(epoch, r, match);
+    GetOverlappingEntries(epoch, r, match);
     char buf[1024];
     int buf_len = snprintf(buf, 1024, "%d,%f,%llu,%llu,%llu\n", epoch, r,
                            match.TotalMass(), epoch_mass, match.Size());
