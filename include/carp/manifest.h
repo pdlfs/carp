@@ -203,7 +203,7 @@ class PartitionManifestMatch {
     char buf[buf_sz];
 
     snprintf(buf, buf_sz, "%.3f%% selectivity (%" PRIu64 " items)",
-             GetSelectivity()*100, TotalMass());
+             GetSelectivity() * 100, TotalMass());
 
     return std::string(buf);
   }
@@ -227,6 +227,7 @@ class PartitionManifestMatch {
   uint64_t val_sz_;
 
   friend class PartitionManifest;
+  template <typename U>
   friend class SimpleReader;
 };
 

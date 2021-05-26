@@ -4,14 +4,14 @@
 
 #include "range_reader.h"
 
-#include "carp/manifest.h"
 #include "query_utils.h"
 #include "reader_base.h"
 
 namespace pdlfs {
 namespace plfsio {
 
-Status RangeReader::ReadManifest(const std::string& dir_path) {
+template <typename T>
+Status RangeReader<T>::ReadManifest(const std::string& dir_path) {
   logger_.RegisterBegin("MFREAD");
 
   Status s = Status::OK();
@@ -22,7 +22,7 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
   manifest_reader_.EnableManifestOutput(dir_path);
 
   RandomAccessFile* src;
-  std::vector<ManifestReadWorkItem> work_items;
+  std::vector<ManifestReadWorkItem<T>> work_items;
   work_items.resize(num_ranks_);
 
   task_tracker_.Reset();
@@ -59,11 +59,13 @@ Status RangeReader::ReadManifest(const std::string& dir_path) {
   return s;
 }
 
-Status RangeReader::QueryParallel(Query q) {
+template <typename T>
+Status RangeReader<T>::QueryParallel(Query q) {
   return QueryParallel(q.epoch, q.range.range_min, q.range.range_max);
 }
 
-Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
+template <typename T>
+Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
 
   PartitionManifestMatch match_obj;
@@ -105,7 +107,9 @@ Status RangeReader::QueryParallel(int epoch, float rbegin, float rend) {
 
   return Status::OK();
 }
-Status RangeReader::QuerySequential(int epoch, float rbegin, float rend) {
+
+template <typename T>
+Status RangeReader<T>::QuerySequential(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
 
   PartitionManifestMatch match_obj;
@@ -141,7 +145,8 @@ Status RangeReader::QuerySequential(int epoch, float rbegin, float rend) {
   return Status::OK();
 }
 
-Status RangeReader::AnalyzeManifest(const std::string& dir_path) {
+template <typename T>
+Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path) {
   Status s = Status::OK();
   s = ReadManifest(dir_path);
   if (!s.ok()) return s;
@@ -160,14 +165,15 @@ Status RangeReader::AnalyzeManifest(const std::string& dir_path) {
     manifest_.GetOverlappingEntries(q, match);
 
     logf(LOG_INFO, "%s: %s", q.ToString().c_str(), match.ToString().c_str());
-//    QueryParallel(q);
+    //    QueryParallel(q);
   }
 
   return s;
 }
 
-void RangeReader::ManifestReadWorker(void* arg) {
-  ManifestReadWorkItem* item = static_cast<ManifestReadWorkItem*>(arg);
+template <typename T>
+void RangeReader<T>::ManifestReadWorker(void* arg) {
+  ManifestReadWorkItem<T>* item = static_cast<ManifestReadWorkItem<T>*>(arg);
 
   RandomAccessFile* src;
   uint64_t src_sz;
@@ -183,12 +189,13 @@ void RangeReader::ManifestReadWorker(void* arg) {
   item->task_tracker->MarkCompleted();
 }
 
-Status RangeReader::ReadSSTs(PartitionManifestMatch& match,
-                             std::vector<KeyPair>& query_results) {
+template <typename T>
+Status RangeReader<T>::ReadSSTs(PartitionManifestMatch& match,
+                                std::vector<KeyPair>& query_results) {
   Slice slice;
   std::string scratch;
 
-  std::vector<SSTReadWorkItem> work_items;
+  std::vector<SSTReadWorkItem<T>> work_items;
   work_items.resize(match.Size());
   query_results.resize(match.TotalMass());
   task_tracker_.Reset();
@@ -220,8 +227,9 @@ Status RangeReader::ReadSSTs(PartitionManifestMatch& match,
   return Status::OK();
 }
 
-Status RangeReader::RankwiseReadSSTs(PartitionManifestMatch& match,
-                                     std::vector<KeyPair>& query_results) {
+template <typename T>
+Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,
+                                        std::vector<KeyPair>& query_results) {
   Slice slice;
   std::string scratch;
 
@@ -234,7 +242,7 @@ Status RangeReader::RankwiseReadSSTs(PartitionManifestMatch& match,
   std::vector<int> ranks;
   match.GetUniqueRanks(ranks);
 
-  std::vector<RankwiseSSTReadWorkItem> work_items;
+  std::vector<RankwiseSSTReadWorkItem<T>> work_items;
   work_items.resize(ranks.size());
   query_results.resize(match.TotalMass());
 
@@ -264,8 +272,9 @@ Status RangeReader::RankwiseReadSSTs(PartitionManifestMatch& match,
   return Status::OK();
 }
 
-void RangeReader::SSTReadWorker(void* arg) {
-  SSTReadWorkItem* wi = static_cast<SSTReadWorkItem*>(arg);
+template <typename T>
+void RangeReader<T>::SSTReadWorker(void* arg) {
+  SSTReadWorkItem<T>* wi = static_cast<SSTReadWorkItem<T>*>(arg);
   Status s = Status::OK();
 
   int rank = wi->item->rank;
@@ -306,8 +315,10 @@ void RangeReader::SSTReadWorker(void* arg) {
   wi->task_tracker->MarkCompleted();
 }
 
-void RangeReader::RankwiseSSTReadWorker(void* arg) {
-  RankwiseSSTReadWorkItem* wi = static_cast<RankwiseSSTReadWorkItem*>(arg);
+template <typename T>
+void RangeReader<T>::RankwiseSSTReadWorker(void* arg) {
+  RankwiseSSTReadWorkItem<T>* wi =
+      static_cast<RankwiseSSTReadWorkItem<T>*>(arg);
   Status s = Status::OK();
 
   int rank = wi->rank;
@@ -364,8 +375,10 @@ void RangeReader::RankwiseSSTReadWorker(void* arg) {
   wi->task_tracker->MarkCompleted();
 }
 
-void RangeReader::ReadBlock(int rank, uint64_t offset, uint64_t size,
-                            Slice& slice, std::string& scratch, bool preview) {
+template <typename T>
+void RangeReader<T>::ReadBlock(int rank, uint64_t offset, uint64_t size,
+                               Slice& slice, std::string& scratch,
+                               bool preview) {
   Status s = Status::OK();
 
   scratch.resize(size);
@@ -394,5 +407,8 @@ void RangeReader::ReadBlock(int rank, uint64_t offset, uint64_t size,
     block_offset += 60;
   }
 }
+
+template class RangeReader<SequentialFile>;
+template class RangeReader<RandomAccessFile>;
 }  // namespace plfsio
 }  // namespace pdlfs

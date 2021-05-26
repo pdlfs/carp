@@ -13,6 +13,7 @@
 namespace pdlfs {
 namespace plfsio {
 
+template <typename T>
 class SimpleReader {
  public:
   SimpleReader(const RdbOptions& options)
@@ -74,7 +75,7 @@ class SimpleReader {
         "[SingleBenchmark] First rank: %d, last rank: %d, total data read: %d "
         "MB, time taken: %.3fs\n",
         first_rank, last_rank,
-        (last_rank - first_rank)  * items_per_rank * size_item_mb,
+        (last_rank - first_rank) * items_per_rank * size_item_mb,
         USTOSEC(read_end_us - read_begin_us));
   }
 
@@ -147,7 +148,7 @@ class SimpleReader {
     std::vector<int> ranks;
     match.GetUniqueRanks(ranks);
 
-    std::vector<RankwiseSSTReadWorkItemAlt> work_items;
+    std::vector<RankwiseSSTReadWorkItem<T>> work_items;
     work_items.resize(ranks.size());
     query_results.resize(match.TotalMass());
 
@@ -178,7 +179,7 @@ class SimpleReader {
   }
 
   static void RankwiseSSTReadWorker(void* arg) {
-    RankwiseSSTReadWorkItemAlt* wi = static_cast<RankwiseSSTReadWorkItemAlt*>(arg);
+    RankwiseSSTReadWorkItem<T>* wi = static_cast<RankwiseSSTReadWorkItem<T>*>(arg);
     Status s = Status::OK();
 
     int rank = wi->rank;
@@ -244,7 +245,7 @@ class SimpleReader {
 };
 
 void RunBenchmark(RdbOptions& options) {
-  SimpleReader simple_reader(options);
+  SimpleReader<RandomAccessFile> simple_reader(options);
   simple_reader.BenchmarkSuite();
 }
 }  // namespace plfsio

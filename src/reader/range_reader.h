@@ -28,13 +28,15 @@ struct KeyPair {
   size_t offset;
 };
 
+template<typename T>
 struct ManifestReadWorkItem {
   int rank;
-  CachingDirReader<SequentialFile>* fdcache;
+  CachingDirReader<T>* fdcache;
   TaskCompletionTracker* task_tracker;
   PartitionManifestReader* manifest_reader;
 };
 
+template<typename T>
 struct SSTReadWorkItem {
   PartitionManifestItem* item;
   size_t key_sz;
@@ -43,10 +45,11 @@ struct SSTReadWorkItem {
   std::vector<KeyPair>* query_results;
   uint64_t qrvec_offset;
 
-  CachingDirReader<SequentialFile>* fdcache;
+  CachingDirReader<T>* fdcache;
   TaskCompletionTracker* task_tracker;
 };
 
+template<typename T>
 struct RankwiseSSTReadWorkItem {
   std::vector<PartitionManifestItem> wi_vec;
   int rank;
@@ -56,7 +59,7 @@ struct RankwiseSSTReadWorkItem {
   std::vector<KeyPair>* query_results;
   uint64_t qrvec_offset;
 
-  CachingDirReader<SequentialFile>* fdcache;
+  CachingDirReader<T>* fdcache;
   TaskCompletionTracker* task_tracker;
 };
 
@@ -66,6 +69,7 @@ struct KeyPairComparator {
   }
 };
 
+template <typename T>
 class RangeReader {
  public:
   RangeReader(const RdbOptions& options)
@@ -113,7 +117,7 @@ class RangeReader {
 
   const RdbOptions& options_;
   std::string dir_path_;
-  CachingDirReader<SequentialFile> fdcache_;
+  CachingDirReader<T> fdcache_;
   PartitionManifest manifest_;
   PartitionManifestReader manifest_reader_;
   int num_ranks_;

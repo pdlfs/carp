@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  pdlfs::plfsio::RangeReader reader(options);
+  pdlfs::plfsio::RangeReader<pdlfs::RandomAccessFile> reader(options);
   if (options.query_on) {
     reader.ReadManifest(options.data_path);
     reader.QueryParallel(options.query_epoch, options.query_begin,
