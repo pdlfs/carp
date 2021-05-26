@@ -34,11 +34,11 @@ class SimpleReader {
   void BenchmarkSuite() {
     srand(time(nullptr));
 
-    SingleBenchmark(0, 0, 100, 5);
-    SingleBenchmark(1, 1, 100, 10);
+    SingleBenchmark(0, 1, 64, 5);
+    SingleBenchmark(1, 2, 64, 10);
 
-    int start_rank = rand() % 5;
-    SingleBenchmark(start_rank, start_rank + 101, 1, 10);
+    int start_rank = (rand() % 5) * 100;
+    SingleBenchmark(start_rank, start_rank + 64, 1, 10);
 
     logf(
         LOG_WARN,
@@ -51,7 +51,7 @@ class SimpleReader {
     PartitionManifestMatch match;
     std::vector<KeyPair> query_results;
 
-    for (int rank = first_rank; rank <= last_rank; rank++) {
+    for (int rank = first_rank; rank < last_rank; rank++) {
       GenRandomMatches(rank, size_item_mb, items_per_rank, match);
     }
 
@@ -74,7 +74,7 @@ class SimpleReader {
         "[SingleBenchmark] First rank: %d, last rank: %d, total data read: %d "
         "MB, time taken: %.3fs\n",
         first_rank, last_rank,
-        (last_rank - first_rank + 1) * items_per_rank * size_item_mb,
+        (last_rank - first_rank)  * items_per_rank * size_item_mb,
         USTOSEC(read_end_us - read_begin_us));
   }
 
@@ -87,7 +87,7 @@ class SimpleReader {
     const size_t val_sz = 60;
     match.SetKVSizes(key_sz, val_sz);
 
-    SequentialFile* fh;
+    RandomAccessFile* fh;
     uint64_t file_sz;
     uint64_t sst_sz = MB(size_mb);
     uint64_t sst_cnt = sst_sz / (key_sz + val_sz);
@@ -147,7 +147,7 @@ class SimpleReader {
     std::vector<int> ranks;
     match.GetUniqueRanks(ranks);
 
-    std::vector<RankwiseSSTReadWorkItem> work_items;
+    std::vector<RankwiseSSTReadWorkItemAlt> work_items;
     work_items.resize(ranks.size());
     query_results.resize(match.TotalMass());
 
@@ -178,7 +178,7 @@ class SimpleReader {
   }
 
   static void RankwiseSSTReadWorker(void* arg) {
-    RankwiseSSTReadWorkItem* wi = static_cast<RankwiseSSTReadWorkItem*>(arg);
+    RankwiseSSTReadWorkItemAlt* wi = static_cast<RankwiseSSTReadWorkItemAlt*>(arg);
     Status s = Status::OK();
 
     int rank = wi->rank;
@@ -240,7 +240,7 @@ class SimpleReader {
   int num_ranks_;
   ThreadPool* thpool_;
   TaskCompletionTracker task_tracker_;
-  CachingDirReader<SequentialFile> fdcache_;
+  CachingDirReader<RandomAccessFile> fdcache_;
 };
 
 void RunBenchmark(RdbOptions& options) {
