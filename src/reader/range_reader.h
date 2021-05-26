@@ -78,6 +78,13 @@ class RangeReader {
     thpool_ = ThreadPool::NewFixed(options.parallelism);
   }
 
+  ~RangeReader() {
+    if (thpool_) {
+      delete thpool_;
+      thpool_ = nullptr;
+    }
+  }
+
   Status ReadManifest(const std::string& dir_path);
 
   Status QueryParallel(Query q);
@@ -95,7 +102,7 @@ class RangeReader {
                   std::vector<KeyPair>& query_results);
 
   Status RankwiseReadSSTs(PartitionManifestMatch& match,
-                  std::vector<KeyPair>& query_results);
+                          std::vector<KeyPair>& query_results);
 
   static void SSTReadWorker(void* arg);
 

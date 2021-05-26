@@ -227,6 +227,7 @@ class PartitionManifestMatch {
   uint64_t val_sz_;
 
   friend class PartitionManifest;
+  friend class SimpleReader;
 };
 
 // Public Query interface is thread-safe, write interface is not
