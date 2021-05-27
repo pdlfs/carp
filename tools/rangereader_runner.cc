@@ -31,6 +31,38 @@
 namespace pdlfs {
 namespace plfsio {
 void feature_prompt() { logf(LOG_INFO, TBB_PROMPT); }
+
+void ReadCSV(Env* env, const char* csv_path, std::vector<Query>& qvec) {
+  std::string data;
+
+  Status s = ReadFileToString(env, csv_path, &data);
+  if (!s.ok()) {
+    logf(LOG_ERRO, "error: %s", s.ToString().c_str());
+    exit(-1);
+  }
+
+  const char* const data_ptr = data.c_str();
+  size_t i = 0;
+
+  while (i < data.size()) {
+    int epoch;
+    float qbeg, qend;
+
+    size_t bytes_read =
+        sscanf(data_ptr + i, "%f,%f,%f\n", &epoch, &qbeg, &qend);
+
+    if (bytes_read == 0) {
+      logf(LOG_ERRO, "CSV parsing failed!");
+      exit(-1);
+    }
+
+    Query q(epoch, qbeg, qend);
+    qvec.push_back(q);
+
+    logf(LOG_INFO, "Query parsed: %s", q.ToString().c_str());
+  }
+}
+
 }  // namespace plfsio
 }  // namespace pdlfs
 
@@ -139,8 +171,11 @@ int main(int argc, char* argv[]) {
     reader.QueryParallel(options.query_epoch, options.query_begin,
                          options.query_end);
   } else if (options.query_batch) {
+    std::vector<pdlfs::plfsio::Query> qvec;
+    pdlfs::plfsio::ReadCSV(options.env, options.query_batch_in.c_str(), qvec);
     printf("Batch Queries not implemented\n");
     exit(EXIT_FAILURE);
+    reader.QueryParallel(qvec);
   } else {
     reader.AnalyzeManifest(options.data_path);
   }

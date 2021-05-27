@@ -60,11 +60,6 @@ Status RangeReader<T>::ReadManifest(const std::string& dir_path) {
 }
 
 template <typename T>
-Status RangeReader<T>::QueryParallel(Query q) {
-  return QueryParallel(q.epoch, q.range.range_min, q.range.range_max);
-}
-
-template <typename T>
 Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
 

@@ -28,7 +28,7 @@ struct KeyPair {
   size_t offset;
 };
 
-template<typename T>
+template <typename T>
 struct ManifestReadWorkItem {
   int rank;
   CachingDirReader<T>* fdcache;
@@ -36,7 +36,7 @@ struct ManifestReadWorkItem {
   PartitionManifestReader* manifest_reader;
 };
 
-template<typename T>
+template <typename T>
 struct SSTReadWorkItem {
   PartitionManifestItem* item;
   size_t key_sz;
@@ -49,7 +49,7 @@ struct SSTReadWorkItem {
   TaskCompletionTracker* task_tracker;
 };
 
-template<typename T>
+template <typename T>
 struct RankwiseSSTReadWorkItem {
   std::vector<PartitionManifestItem> wi_vec;
   int rank;
@@ -91,7 +91,20 @@ class RangeReader {
 
   Status ReadManifest(const std::string& dir_path);
 
-  Status QueryParallel(Query q);
+  Status QueryParallel(std::vector<Query> qvec) {
+    Status s = Status::OK();
+
+    for (size_t i = 0; i < qvec.size(); i++) {
+      s = QueryParallel(qvec[i]);
+      if (!s.ok()) break;
+    }
+
+    return s;
+  }
+
+  Status QueryParallel(Query q) {
+    return QueryParallel(q.epoch, q.range.range_min, q.range.range_max);
+  }
 
   Status QueryParallel(int epoch, float rbegin, float rend);
 
