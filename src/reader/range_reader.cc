@@ -217,7 +217,7 @@ Status RangeReader<T>::ReadSSTs(PartitionManifestMatch& match,
     work_items[i].fdcache = &fdcache_;
     work_items[i].task_tracker = &task_tracker_;
 
-    thpool_->Schedule(SSTReadWorker, (void*)&work_items[i]);
+    thpool_->Schedule(QueryUtils::SSTReadWorker<T>, (void*)&work_items[i]);
   }
 
   assert(mass_sum == match.TotalMass());
@@ -262,7 +262,7 @@ Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,
     work_items[i].fdcache = &fdcache_;
     work_items[i].task_tracker = &task_tracker_;
 
-    thpool_->Schedule(RankwiseSSTReadWorker, (void*)&work_items[i]);
+    thpool_->Schedule(QueryUtils::RankwiseSSTReadWorker<T>, (void*)&work_items[i]);
   }
 
   assert(mass_sum == match.TotalMass());
@@ -270,109 +270,6 @@ Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,
   task_tracker_.WaitUntilCompleted(work_items.size());
 
   return Status::OK();
-}
-
-template <typename T>
-void RangeReader<T>::SSTReadWorker(void* arg) {
-  SSTReadWorkItem<T>* wi = static_cast<SSTReadWorkItem<T>*>(arg);
-  Status s = Status::OK();
-
-  int rank = wi->item->rank;
-
-  Slice slice;
-  std::string scratch;
-
-  const size_t key_sz = wi->key_sz;
-  const size_t val_sz = wi->val_sz;
-  const size_t item_sz = wi->key_sz + wi->val_sz;
-  const size_t sst_sz = wi->item->part_item_count * item_sz;
-
-  std::vector<KeyPair>& qvec = *wi->query_results;
-  int qidx = wi->qrvec_offset;
-
-  ReadRequest req;
-  req.offset = wi->item->offset;
-  req.bytes = sst_sz;
-  req.scratch = &scratch[0];
-
-  s = wi->fdcache->Read(rank, req, true);
-  if (!s.ok()) {
-    logf(LOG_ERRO, "Read Failure");
-    return;
-  }
-
-  slice = req.slice;
-  std::vector<KeyPair> query_results;
-
-  uint64_t block_offset = 0;
-  while (block_offset < sst_sz) {
-    qvec[qidx].key = DecodeFloat32(&slice[block_offset]);
-    // XXX: val?
-    block_offset += item_sz;
-    qidx++;
-  }
-
-  wi->task_tracker->MarkCompleted();
-}
-
-template <typename T>
-void RangeReader<T>::RankwiseSSTReadWorker(void* arg) {
-  RankwiseSSTReadWorkItem<T>* wi =
-      static_cast<RankwiseSSTReadWorkItem<T>*>(arg);
-  Status s = Status::OK();
-
-  int rank = wi->rank;
-
-  const size_t key_sz = wi->key_sz;
-  const size_t val_sz = wi->val_sz;
-  const size_t kvp_sz = wi->key_sz + wi->val_sz;
-
-  std::vector<KeyPair>& qvec = *wi->query_results;
-  uint64_t qidx = wi->qrvec_offset;
-
-  std::vector<ReadRequest> req_vec;
-  req_vec.resize(wi->wi_vec.size());
-
-  std::vector<std::string> scratch_vec;
-  scratch_vec.resize(wi->wi_vec.size());
-
-  for (size_t i = 0; i < req_vec.size(); i++) {
-    ReadRequest& req = req_vec[i];
-    PartitionManifestItem& item = wi->wi_vec[i];
-    req.offset = item.offset;
-    req.bytes = kvp_sz * item.part_item_count;
-    scratch_vec[i].resize(req.bytes);
-    req.scratch = &(scratch_vec[i][0]);
-    /* we copy this because req-vec gets reordered */
-    req.item_count = item.part_item_count;
-  }
-
-  s = wi->fdcache->ReadBatch(rank, req_vec);
-  if (!s.ok()) {
-    logf(LOG_ERRO, "Read Failure");
-    return;
-  }
-
-  // XXX: don't reuse req_vec, or create copy above
-  for (size_t i = 0; i < req_vec.size(); i++) {
-    Slice slice = req_vec[i].slice;
-
-    uint64_t keyblk_sz = req_vec[i].item_count * key_sz;
-    /* valblk_off is absolute, keyblk_cur is relative */
-    uint64_t keyblk_cur = 0;
-    uint64_t valblk_cur = req_vec[i].offset + keyblk_sz;
-
-    while (keyblk_cur < keyblk_sz) {
-      qvec[qidx].key = DecodeFloat32(&slice[keyblk_cur]);
-      qvec[qidx].offset = valblk_cur;
-
-      keyblk_cur += key_sz;
-      valblk_cur += val_sz;
-      qidx++;
-    }
-  }
-
-  wi->task_tracker->MarkCompleted();
 }
 
 template <typename T>

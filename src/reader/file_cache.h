@@ -5,6 +5,7 @@
 #pragma once
 
 #include "pdlfs-common/env.h"
+#include "pdlfs-common/mutexlock.h"
 
 #include <map>
 
@@ -70,6 +71,7 @@ class CachingDirReader {
   std::map<int, FileCacheEntry<T> > cache_;
   int num_ranks_;
   const int kMaxCacheSz;
+  port::Mutex mutex_;
 };
 
 }  // namespace plfsio

@@ -8,6 +8,7 @@
 #include "range_reader.h"
 #include "reader_base.h"
 
+#include <pdlfs-common/mutexlock.h>
 #include <string>
 
 #define MAP_HAS(m, k) (m.find(k) != m.end())
@@ -161,9 +162,38 @@ Status CachingDirReader<SequentialFile>::OpenFileHandle(int rank,
   return s;
 }
 
-template <typename T>
-Status CachingDirReader<T>::GetFileHandle(int rank, T** fh, uint64_t* fsz,
+template <>
+Status CachingDirReader<RandomAccessFile>::GetFileHandle(int rank, RandomAccessFile** fh, uint64_t* fsz,
                                           bool force_reopen) {
+  MutexLock ml(&mutex_);
+
+  if (!MAP_HAS(cache_, rank)) return Status::InvalidArgument("Rank not found");
+
+  Status s = Status::OK();
+
+  bool is_open = cache_[rank].is_open;
+
+  if (force_reopen) {
+    logf(LOG_WARN, "RandomAccessFile: force-reopen set, ignoring!");
+  }
+
+  if (!is_open) {
+    s = OpenFileHandle(rank, fh, fsz);
+    cache_[rank].fh = *fh;
+    cache_[rank].fsz = *fsz;
+  } else {
+    *fh = cache_[rank].fh;
+    *fsz = cache_[rank].fsz;
+  }
+
+  return s;
+}
+
+template <>
+Status CachingDirReader<SequentialFile>::GetFileHandle(int rank, SequentialFile** fh, uint64_t* fsz,
+                                                       bool force_reopen) {
+  MutexLock ml(&mutex_);
+
   if (!MAP_HAS(cache_, rank)) return Status::InvalidArgument("Rank not found");
 
   Status s = Status::OK();

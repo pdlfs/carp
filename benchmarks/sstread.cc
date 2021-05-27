@@ -5,6 +5,7 @@
 #include "common.h"
 
 #include <carp/manifest.h>
+#include <reader/query_utils.h>
 #include <reader/range_reader.h>
 
 #define KB(x) (1024ull * (x))
@@ -41,9 +42,7 @@ class SimpleReader {
     int start_rank = (rand() % 5) * 100;
     SingleBenchmark(start_rank, start_rank + 64, 1, 10);
 
-    logf(
-        LOG_WARN,
-        "Size estimate only valid if each rank's RDB file has sufficient data");
+    logf(LOG_WARN, "Size estimate only valid if each RDB has sufficient data");
   }
 
   void SingleBenchmark(int first_rank, int last_rank, int items_per_rank,
@@ -57,7 +56,8 @@ class SimpleReader {
     }
 
     uint64_t read_begin_us = options_.env->NowMicros();
-    Status s = RankwiseReadSSTs(match, query_results);
+    //    Status s = RankwiseReadSSTs(match, query_results);
+    Status s = ReadSSTs(match, query_results);
     uint64_t read_end_us = options_.env->NowMicros();
 
     if (s.ok() and !query_results.empty()) {
@@ -71,12 +71,12 @@ class SimpleReader {
 
 #define USTOSEC(x) ((x)*1e-6)
 
-    printf(
-        "[SingleBenchmark] First rank: %d, last rank: %d, total data read: %d "
-        "MB, time taken: %.3fs\n",
-        first_rank, last_rank,
-        (last_rank - first_rank) * items_per_rank * size_item_mb,
-        USTOSEC(read_end_us - read_begin_us));
+    logf(LOG_INFO,
+         "[SingleBenchmark] First rank: %d, last rank: %d, total data read: %d "
+         "MB, time taken: %.3fs\n",
+         first_rank, last_rank,
+         (last_rank - first_rank) * items_per_rank * size_item_mb,
+         USTOSEC(read_end_us - read_begin_us));
   }
 
  private:
@@ -134,6 +134,45 @@ class SimpleReader {
     return s;
   }
 
+  Status ReadSSTs(PartitionManifestMatch& match,
+                  std::vector<KeyPair>& query_results) {
+    QueryUtils::ThreadSafetyWarning<T>();
+
+    Slice slice;
+    std::string scratch;
+
+    std::vector<SSTReadWorkItem<T>> work_items;
+    work_items.resize(match.Size());
+    query_results.resize(match.TotalMass());
+    task_tracker_.Reset();
+
+    uint64_t mass_sum = 0;
+    uint64_t key_sz, val_sz;
+    match.GetKVSizes(key_sz, val_sz);
+
+    for (uint32_t i = 0; i < match.Size(); i++) {
+      PartitionManifestItem& item = match[i];
+      work_items[i].item = &item;
+      work_items[i].key_sz = key_sz;
+      work_items[i].val_sz = val_sz;
+
+      work_items[i].query_results = &query_results;
+      work_items[i].qrvec_offset = mass_sum;
+      mass_sum += item.part_item_count;
+
+      work_items[i].fdcache = &fdcache_;
+      work_items[i].task_tracker = &task_tracker_;
+
+      thpool_->Schedule(QueryUtils::SSTReadWorker<T>, (void*)&work_items[i]);
+    }
+
+    assert(mass_sum == match.TotalMass());
+
+    task_tracker_.WaitUntilCompleted(work_items.size());
+
+    return Status::OK();
+  }
+
   Status RankwiseReadSSTs(PartitionManifestMatch& match,
                           std::vector<KeyPair>& query_results) {
     Slice slice;
@@ -168,7 +207,8 @@ class SimpleReader {
       work_items[i].fdcache = &fdcache_;
       work_items[i].task_tracker = &task_tracker_;
 
-      thpool_->Schedule(RankwiseSSTReadWorker, (void*)&work_items[i]);
+      thpool_->Schedule(QueryUtils::RankwiseSSTReadWorker<T>,
+                        (void*)&work_items[i]);
     }
 
     assert(mass_sum == match.TotalMass());
@@ -176,64 +216,6 @@ class SimpleReader {
     task_tracker_.WaitUntilCompleted(work_items.size());
 
     return Status::OK();
-  }
-
-  static void RankwiseSSTReadWorker(void* arg) {
-    RankwiseSSTReadWorkItem<T>* wi = static_cast<RankwiseSSTReadWorkItem<T>*>(arg);
-    Status s = Status::OK();
-
-    int rank = wi->rank;
-
-    const size_t key_sz = wi->key_sz;
-    const size_t val_sz = wi->val_sz;
-    const size_t kvp_sz = wi->key_sz + wi->val_sz;
-
-    std::vector<KeyPair>& qvec = *wi->query_results;
-    uint64_t qidx = wi->qrvec_offset;
-
-    std::vector<ReadRequest> req_vec;
-    req_vec.resize(wi->wi_vec.size());
-
-    std::vector<std::string> scratch_vec;
-    scratch_vec.resize(wi->wi_vec.size());
-
-    for (size_t i = 0; i < req_vec.size(); i++) {
-      ReadRequest& req = req_vec[i];
-      PartitionManifestItem& item = wi->wi_vec[i];
-      req.offset = item.offset;
-      req.bytes = kvp_sz * item.part_item_count;
-      scratch_vec[i].resize(req.bytes);
-      req.scratch = &(scratch_vec[i][0]);
-      /* we copy this because req-vec gets reordered */
-      req.item_count = item.part_item_count;
-    }
-
-    s = wi->fdcache->ReadBatch(rank, req_vec);
-    if (!s.ok()) {
-      logf(LOG_ERRO, "Read Failure");
-      return;
-    }
-
-    // XXX: don't reuse req_vec, or create copy above
-    for (size_t i = 0; i < req_vec.size(); i++) {
-      Slice slice = req_vec[i].slice;
-
-      uint64_t keyblk_sz = req_vec[i].item_count * key_sz;
-      /* valblk_off is absolute, keyblk_cur is relative */
-      uint64_t keyblk_cur = 0;
-      uint64_t valblk_cur = req_vec[i].offset + keyblk_sz;
-
-      while (keyblk_cur < keyblk_sz) {
-        qvec[qidx].key = DecodeFloat32(&slice[keyblk_cur]);
-        qvec[qidx].offset = valblk_cur;
-
-        keyblk_cur += key_sz;
-        valblk_cur += val_sz;
-        qidx++;
-      }
-    }
-
-    wi->task_tracker->MarkCompleted();
   }
 
   const RdbOptions options_;

@@ -108,10 +108,6 @@ class RangeReader {
   Status RankwiseReadSSTs(PartitionManifestMatch& match,
                           std::vector<KeyPair>& query_results);
 
-  static void SSTReadWorker(void* arg);
-
-  static void RankwiseSSTReadWorker(void* arg);
-
   void ReadBlock(int rank, uint64_t offset, uint64_t size, Slice& slice,
                  std::string& scratch, bool preview = true);
 
