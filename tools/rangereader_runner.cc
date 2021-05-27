@@ -171,6 +171,7 @@ int main(int argc, char* argv[]) {
   } else if (options.query_batch) {
     std::vector<pdlfs::plfsio::Query> qvec;
     pdlfs::plfsio::ReadCSV(options.env, options.query_batch_in.c_str(), qvec);
+    reader.ReadManifest(options.data_path);
     reader.QueryParallel(qvec);
   } else if (options.analytics_on) {
     reader.AnalyzeManifest(options.data_path);
