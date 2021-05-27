@@ -160,7 +160,7 @@ Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path) {
     manifest_.GetOverlappingEntries(q, match);
 
     logf(LOG_INFO, "%s: %s", q.ToString().c_str(), match.ToString().c_str());
-    //    QueryParallel(q);
+       QueryParallel(q);
   }
 
   return s;
