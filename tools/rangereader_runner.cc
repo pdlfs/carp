@@ -148,11 +148,6 @@ int main(int argc, char* argv[]) {
   pdlfs::plfsio::RdbOptions options;
   ParseOptions(argc, argv, options);
 
-  if (options.query_batch) {
-    printf("Batch Queries not implemented\n");
-    exit(EXIT_FAILURE);
-  }
-
   if (options.query_on && options.query_epoch < 0) {
     printf("[ERROR] Epoch < 0\n");
     exit(EXIT_FAILURE);
@@ -165,6 +160,12 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  if (options.query_batch) {
+    printf("Batch Queries not implemented\n");
+    exit(EXIT_FAILURE);
+  }
+
+
   pdlfs::plfsio::RangeReader<pdlfs::RandomAccessFile> reader(options);
   if (options.query_on) {
     reader.ReadManifest(options.data_path);
@@ -176,7 +177,7 @@ int main(int argc, char* argv[]) {
     printf("Batch Queries not implemented\n");
     exit(EXIT_FAILURE);
     reader.QueryParallel(qvec);
-  } else {
+  } else if (options.analytics_on){
     reader.AnalyzeManifest(options.data_path);
   }
 
