@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
   pdlfs::plfsio::RdbOptions options;
   ParseOptions(argc, argv, options);
 
-  if (options.query_on && options.query_epoch < 0) {
+  if (options.query_on && !options.analytics_on && options.query_epoch < 0) {
     printf("[ERROR] Epoch < 0\n");
     exit(EXIT_FAILURE);
   }
@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
   }
 
   pdlfs::plfsio::RangeReader<pdlfs::RandomAccessFile> reader(options);
-  if (options.query_on) {
+  if (options.query_on and !options.analytics_on) {
     reader.ReadManifest(options.data_path);
     reader.QueryParallel(options.query_epoch, options.query_begin,
                          options.query_end);
@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
     reader.ReadManifest(options.data_path);
     reader.QueryParallel(qvec);
   } else if (options.analytics_on) {
-    reader.AnalyzeManifest(options.data_path);
+    reader.AnalyzeManifest(options.data_path, options.query_on);
   }
 
   return 0;

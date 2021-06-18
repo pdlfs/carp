@@ -173,8 +173,9 @@ Status CachingDirReader<RandomAccessFile>::GetFileHandle(int rank, RandomAccessF
 
   bool is_open = cache_[rank].is_open;
 
-  if (force_reopen) {
+  if (force_reopen && first_warn_) {
     logf(LOG_WARN, "RandomAccessFile: force-reopen set, ignoring!");
+    first_warn_ = false;
   }
 
   if (!is_open) {
