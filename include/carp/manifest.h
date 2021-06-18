@@ -49,7 +49,7 @@ struct Range {
 
   bool IsValid() const {
     return ((range_min == FLT_MAX && range_max == FLT_MIN) or
-            (range_min < range_max));
+            (range_min <= range_max));
   }
 
   void Extend(float f) {

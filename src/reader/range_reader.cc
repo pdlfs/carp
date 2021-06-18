@@ -141,7 +141,8 @@ Status RangeReader<T>::QuerySequential(int epoch, float rbegin, float rend) {
 }
 
 template <typename T>
-Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path) {
+Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path,
+                                       bool query) {
   Status s = Status::OK();
   s = ReadManifest(dir_path);
   if (!s.ok()) return s;
@@ -150,18 +151,26 @@ Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path) {
 
   QueryUtils::SummarizeManifest(manifest_);
 
+  if (!query) return s;
+
   std::vector<Query> queries;
   s = QueryUtils::GenQueryPlan(manifest_, queries);
   if (!s.ok()) return s;
 
+  WritableFile* fd;
+  s = options_.env->NewWritableFile("query_plan.csv", &fd);
+  if (!s.ok()) return s;
+
   for (size_t qi = 0; qi < queries.size(); qi++) {
     Query& q = queries[qi];
-    PartitionManifestMatch match;
-    manifest_.GetOverlappingEntries(q, match);
-
-    logf(LOG_INFO, "%s: %s", q.ToString().c_str(), match.ToString().c_str());
-    //    QueryParallel(q);
+    char buf[1024];
+    int buf_len = snprintf(buf, 1024, "%d,%f,%f\n", q.epoch,
+                           q.range.range_min, q.range.range_max);
+    s = fd->Append(Slice(buf, buf_len));
+    if (!s.ok()) return s;
   }
+
+  s = fd->Close();
 
   return s;
 }
@@ -257,7 +266,8 @@ Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,
     work_items[i].fdcache = &fdcache_;
     work_items[i].task_tracker = &task_tracker_;
 
-    thpool_->Schedule(QueryUtils::RankwiseSSTReadWorker<T>, (void*)&work_items[i]);
+    thpool_->Schedule(QueryUtils::RankwiseSSTReadWorker<T>,
+                      (void*)&work_items[i]);
   }
 
   assert(mass_sum == match.TotalMass());

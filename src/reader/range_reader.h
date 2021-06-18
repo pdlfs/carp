@@ -110,7 +110,7 @@ class RangeReader {
 
   Status QuerySequential(int epoch, float rbegin, float rend);
 
-  Status AnalyzeManifest(const std::string& dir_path);
+  Status AnalyzeManifest(const std::string& dir_path, bool query = false);
 
  private:
   static void ManifestReadWorker(void* arg);

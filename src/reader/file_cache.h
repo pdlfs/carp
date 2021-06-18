@@ -37,7 +37,11 @@ template <typename T>
 class CachingDirReader {
  public:
   CachingDirReader(Env* env, int max_cache_size = 512)
-      : env_(env), dir_(""), num_ranks_(0), kMaxCacheSz(max_cache_size) {}
+      : env_(env),
+        dir_(""),
+        num_ranks_(0),
+        kMaxCacheSz(max_cache_size),
+        first_warn_(true) {}
 
   Status GetFileHandle(int rank, T** fh, uint64_t* fsz,
                        bool force_reopen = false);
@@ -72,6 +76,7 @@ class CachingDirReader {
   int num_ranks_;
   const int kMaxCacheSz;
   port::Mutex mutex_;
+  bool first_warn_;
 };
 
 }  // namespace plfsio

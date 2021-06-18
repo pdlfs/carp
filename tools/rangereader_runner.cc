@@ -48,13 +48,16 @@ void ReadCSV(Env* env, const char* csv_path, std::vector<Query>& qvec) {
     int epoch;
     float qbeg, qend;
 
-    size_t bytes_read =
-        sscanf(data_ptr + i, "%f,%f,%f\n", &epoch, &qbeg, &qend);
+    int bytes_read;
+    int items_read =
+        sscanf(data_ptr + i, "%d,%f,%f\n%n", &epoch, &qbeg, &qend, &bytes_read);
 
-    if (bytes_read == 0) {
-      logf(LOG_ERRO, "CSV parsing failed!");
+    if (items_read != 3) {
+      logf(LOG_ERRO, "CSV parsing failed! Items read: %d", items_read);
       exit(-1);
     }
+
+    i += bytes_read;
 
     Query q(epoch, qbeg, qend);
     qvec.push_back(q);
@@ -148,7 +151,7 @@ int main(int argc, char* argv[]) {
   pdlfs::plfsio::RdbOptions options;
   ParseOptions(argc, argv, options);
 
-  if (options.query_on && options.query_epoch < 0) {
+  if (options.query_on && !options.analytics_on && options.query_epoch < 0) {
     printf("[ERROR] Epoch < 0\n");
     exit(EXIT_FAILURE);
   }
@@ -160,25 +163,18 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  if (options.query_batch) {
-    printf("Batch Queries not implemented\n");
-    exit(EXIT_FAILURE);
-  }
-
-
   pdlfs::plfsio::RangeReader<pdlfs::RandomAccessFile> reader(options);
-  if (options.query_on) {
+  if (options.query_on and !options.analytics_on) {
     reader.ReadManifest(options.data_path);
     reader.QueryParallel(options.query_epoch, options.query_begin,
                          options.query_end);
   } else if (options.query_batch) {
     std::vector<pdlfs::plfsio::Query> qvec;
     pdlfs::plfsio::ReadCSV(options.env, options.query_batch_in.c_str(), qvec);
-    printf("Batch Queries not implemented\n");
-    exit(EXIT_FAILURE);
+    reader.ReadManifest(options.data_path);
     reader.QueryParallel(qvec);
-  } else if (options.analytics_on){
-    reader.AnalyzeManifest(options.data_path);
+  } else if (options.analytics_on) {
+    reader.AnalyzeManifest(options.data_path, options.query_on);
   }
 
   return 0;
