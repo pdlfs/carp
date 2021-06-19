@@ -229,6 +229,7 @@ class PartitionManifestMatch {
   friend class PartitionManifest;
   template <typename U>
   friend class SimpleReader;
+  friend class QueryMatchOptimizer;
 };
 
 // Public Query interface is thread-safe, write interface is not

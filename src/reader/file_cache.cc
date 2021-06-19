@@ -5,6 +5,7 @@
 #include "file_cache.h"
 
 #include "common.h"
+#include "optimizer.h"
 #include "range_reader.h"
 #include "reader_base.h"
 
@@ -163,8 +164,10 @@ Status CachingDirReader<SequentialFile>::OpenFileHandle(int rank,
 }
 
 template <>
-Status CachingDirReader<RandomAccessFile>::GetFileHandle(int rank, RandomAccessFile** fh, uint64_t* fsz,
-                                          bool force_reopen) {
+Status CachingDirReader<RandomAccessFile>::GetFileHandle(int rank,
+                                                         RandomAccessFile** fh,
+                                                         uint64_t* fsz,
+                                                         bool force_reopen) {
   MutexLock ml(&mutex_);
 
   if (!MAP_HAS(cache_, rank)) return Status::InvalidArgument("Rank not found");
@@ -191,7 +194,9 @@ Status CachingDirReader<RandomAccessFile>::GetFileHandle(int rank, RandomAccessF
 }
 
 template <>
-Status CachingDirReader<SequentialFile>::GetFileHandle(int rank, SequentialFile** fh, uint64_t* fsz,
+Status CachingDirReader<SequentialFile>::GetFileHandle(int rank,
+                                                       SequentialFile** fh,
+                                                       uint64_t* fsz,
                                                        bool force_reopen) {
   MutexLock ml(&mutex_);
 

@@ -4,6 +4,7 @@
 
 #include "range_reader.h"
 
+#include "optimizer.h"
 #include "query_utils.h"
 #include "reader_base.h"
 
@@ -62,9 +63,13 @@ Status RangeReader<T>::ReadManifest(const std::string& dir_path) {
 template <typename T>
 Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
+  Status s = Status::OK();
 
-  PartitionManifestMatch match_obj;
-  manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj);
+  PartitionManifestMatch match_obj_in, match_obj;
+  manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj_in);
+
+  s = QueryMatchOptimizer::Optimize(match_obj_in, match_obj);
+  if (!s.ok()) return s;
 
   logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
        match_obj.TotalMass());
@@ -100,7 +105,7 @@ Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
   logger_.PrintStats();
   logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend, qsel);
 
-  return Status::OK();
+  return s;
 }
 
 template <typename T>
