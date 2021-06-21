@@ -53,8 +53,7 @@ int PartitionManifest::GetOverlappingEntries(int epoch, float range_begin,
 int PartitionManifest::GetOverlappingEntries(Query& q,
                                              PartitionManifestMatch& match) {
   for (size_t i = 0; i < items_.size(); i++) {
-    if (items_[i].epoch == q.epoch &&
-        items_[i].Overlaps(q.range)) {
+    if (items_[i].epoch == q.epoch && items_[i].Overlaps(q.range)) {
       match.AddItem(items_[i]);
     }
   }
@@ -138,8 +137,9 @@ void PartitionManifest::GenEpochStatsCSV(const int epoch,
     PartitionManifestMatch match;
     GetOverlappingEntries(epoch, r, match);
     char buf[1024];
-    int buf_len = snprintf(buf, 1024, "%d,%f,%llu,%llu,%llu\n", epoch, r,
-                           match.TotalMass(), epoch_mass, match.Size());
+    int buf_len =
+        snprintf(buf, 1024, "%d,%f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 "\n",
+                 epoch, r, match.TotalMass(), epoch_mass, match.Size());
     assert(buf_len > 0 and buf_len < 1024);
     fd->Append(Slice(buf, buf_len));
 

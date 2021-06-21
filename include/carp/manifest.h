@@ -104,7 +104,7 @@ struct PartitionManifestItem {
     char buf[1024];
     // clang-format off
     snprintf(buf, 1024,
-             "[EPOCH %d][%10llu]\t%.3f -> %.3f\t"
+             "[EPOCH %d][%10" PRIu64 "]\t%.3f -> %.3f\t"
              "(Expected: %.3f to %.3f, Rank %d, %u items, %u OOB, Round %u)",
              epoch, offset, observed.range_min, observed.range_max,
              expected.range_min, expected.range_max, rank, part_item_count,
