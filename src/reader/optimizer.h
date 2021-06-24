@@ -19,6 +19,44 @@ namespace pdlfs {
 namespace plfsio {
 class QueryMatchOptimizer {
  public:
+  static Status OptimizeSchedule(PartitionManifestMatch& match) {
+    Status s = Status::OK();
+
+    std::map<int, std::vector<PartitionManifestItem>> item_map;
+    std::vector<int> all_ranks;
+    match.GetUniqueRanks(all_ranks);
+
+    const size_t match_origcnt = match.items_.size();
+
+    for (size_t ri = 0; ri < all_ranks.size(); ri++) {
+      int rank = all_ranks[ri];
+      std::vector<PartitionManifestItem>& vec = item_map[rank];
+      assert(vec.empty());
+      match.GetMatchesByRank(rank, vec);
+      std::sort(vec.begin(), vec.end(), PMISort());
+    }
+
+    match.items_.resize(0);
+
+    for (size_t ri = 0; ri < all_ranks.size(); ri++) {
+      int rank = all_ranks[ri];
+      std::vector<PartitionManifestItem>& vec = item_map[rank];
+      if (!vec.empty()) match.items_.push_back(vec[0]);
+    }
+
+    for (size_t ri = 0; ri < all_ranks.size(); ri++) {
+      int rank = all_ranks[ri];
+      std::vector<PartitionManifestItem>& vec = item_map[rank];
+      for (size_t vi = 1; vi < vec.size(); vi++) {
+        match.items_.push_back(vec[vi]);
+      }
+    }
+
+    assert(match.items_.size() == match_origcnt);
+
+    return s;
+  }
+
   static Status Optimize(PartitionManifestMatch& in,
                          PartitionManifestMatch& out) {
     Status s = Status::OK();
@@ -73,7 +111,7 @@ class QueryMatchOptimizer {
       uint64_t prev_end = cur.offset + (kvp_sz * cur.part_item_count);
       uint64_t cur_start = items_in[i].offset;
       uint64_t intermediate_sz = (cur_start - prev_end);
-      if (intermediate_sz < 512 * 1024) {
+      if (intermediate_sz < MB(1)) {
         // merge
         assert(intermediate_sz % kvp_sz == 0);
         uint64_t num_extra_items = intermediate_sz / kvp_sz;
@@ -85,11 +123,13 @@ class QueryMatchOptimizer {
         items_out.push_back(cur);
         cur = items_in[i];
       }
-
-      if (cur_set) {
-        items_out.push_back(cur);
-      }
     }
+
+    if (cur_set) {
+      items_out.push_back(cur);
+    }
+
+    assert(items_out.size() <= items_in.size());
   }
 };
 }  // namespace plfsio

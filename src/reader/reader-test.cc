@@ -3,6 +3,7 @@
 //
 
 #include "compactor.h"
+#include "optimizer.h"
 
 #include "pdlfs-common/testharness.h"
 #include "pdlfs-common/testutil.h"
@@ -44,11 +45,34 @@ TEST(ReaderTest, PlfsTest) {
 
 TEST(ReaderTest, QuerySanityCheck) {
   Query q1(0, 0.5, 10);
-  Query q2 (0, 0, 1);
+  Query q2(0, 0, 1);
   ASSERT_TRUE(q1.Overlaps(q2));
 
   Query q3(1, 1, 2);
   ASSERT_FALSE(q3.Overlaps(q2));
+}
+
+TEST(ReaderTest, OptimizeCheck) {
+  PartitionManifestMatch match;
+  Range zero = {0, 0};
+  PartitionManifestItem item = {0, 0, 0, zero, zero, 0, 0, 0};
+  match.AddItem(item);
+  item = {0, 0, 10, zero, zero, 0, 0, 0};
+  match.AddItem(item);
+  item = {0, 1, 0, zero, zero, 0, 0, 0};
+  match.AddItem(item);
+  item = {0, 2, 0, zero, zero, 0, 0, 0};
+  match.AddItem(item);
+  item = {0, 0, 5, zero, zero, 0, 0, 0};
+  match.AddItem(item);
+
+  QueryMatchOptimizer::OptimizeSchedule(match);
+  ASSERT_EQ(match.Size(), 5);
+  ASSERT_EQ(match[0].rank, 0);
+  ASSERT_EQ(match[1].rank, 1);
+  ASSERT_EQ(match[2].rank, 2);
+  ASSERT_EQ(match[3].rank, 0);
+  ASSERT_EQ(match[4].rank, 0);
 }
 }  // namespace plfsio
 }  // namespace pdlfs

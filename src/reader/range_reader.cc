@@ -66,9 +66,10 @@ Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
   Status s = Status::OK();
 
   PartitionManifestMatch match_obj_in, match_obj;
-  manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj_in);
+  manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj);
 
-  s = QueryMatchOptimizer::Optimize(match_obj_in, match_obj);
+//  s = QueryMatchOptimizer::Optimize(match_obj_in, match_obj);
+  s = QueryMatchOptimizer::OptimizeSchedule(match_obj);
   if (!s.ok()) return s;
 
   logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
