@@ -78,7 +78,7 @@ Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
   match_obj.Print();
 
   std::vector<KeyPair> query_results;
-  RankwiseReadSSTs(match_obj, query_results);
+  ReadSSTs(match_obj, query_results);
 
   logger_.RegisterEnd("SSTREAD");
   logger_.RegisterBegin("SORT");

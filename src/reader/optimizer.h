@@ -75,6 +75,8 @@ class QueryMatchOptimizer {
     in.GetKVSizes(key_sz, val_sz);
     out.SetKVSizes(key_sz, val_sz);
 
+    out.SetDataSize(in.DataSize());
+
     for (size_t i = 0; i < match_ranks.size(); i++) {
       int rank = match_ranks[i];
       std::vector<PartitionManifestItem> items_orig, items_opt;

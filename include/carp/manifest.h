@@ -196,6 +196,8 @@ class PartitionManifestMatch {
 
   uint64_t Size() const { return items_.size(); }
 
+  uint64_t DataSize() const { return mass_data_; }
+
   PartitionManifestItem& operator[](size_t i) { return this->items_[i]; }
 
   std::string ToString() const {
