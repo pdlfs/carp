@@ -115,11 +115,15 @@ void QueryUtils::SSTReadWorker(void* arg) {
   req.bytes = sst_sz;
   req.scratch = &scratch[0];
 
+  int req_id = wi->task_tracker->MarkBegin();
+
   s = wi->fdcache->Read(rank, req, /* force-reopen */ false);
   if (!s.ok()) {
     logf(LOG_ERRO, "Read Failure");
     return;
   }
+
+  wi->task_tracker->MarkIOCompleted(req_id);
 
   slice = req.slice;
 
@@ -135,7 +139,7 @@ void QueryUtils::SSTReadWorker(void* arg) {
     qidx++;
   }
 
-  wi->task_tracker->MarkCompleted();
+  wi->task_tracker->MarkCompleted(req_id);
 }
 
 template <typename T>
@@ -170,11 +174,15 @@ void QueryUtils::RankwiseSSTReadWorker(void* arg) {
     req.item_count = item.part_item_count;
   }
 
+  int req_id = wi->task_tracker->MarkBegin();
+
   s = wi->fdcache->ReadBatch(rank, req_vec);
   if (!s.ok()) {
     logf(LOG_ERRO, "Read Failure");
     return;
   }
+
+  wi->task_tracker->MarkIOCompleted(req_id);
 
   // XXX: don't reuse req_vec, or create copy above
   for (size_t i = 0; i < req_vec.size(); i++) {
@@ -195,7 +203,7 @@ void QueryUtils::RankwiseSSTReadWorker(void* arg) {
     }
   }
 
-  wi->task_tracker->MarkCompleted();
+  wi->task_tracker->MarkCompleted(req_id);
 }
 
 Status QueryUtils::GenQueries(PartitionManifest& manifest, int epoch,

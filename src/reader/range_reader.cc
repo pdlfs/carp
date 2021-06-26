@@ -105,6 +105,7 @@ Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
 
   logger_.PrintStats();
   logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend, qsel);
+  task_tracker_.AnalyzeTimes();
 
   return s;
 }
@@ -196,7 +197,7 @@ void RangeReader<T>::ManifestReadWorker(void* arg) {
   item->manifest_reader->UpdateKVSizes(pf.key_sz, pf.val_sz);
   item->manifest_reader->ReadManifest(item->rank, pf.manifest_data,
                                       pf.manifest_sz);
-  item->task_tracker->MarkCompleted();
+  item->task_tracker->MarkCompleted(0);
 }
 
 template <typename T>

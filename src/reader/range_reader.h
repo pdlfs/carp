@@ -78,6 +78,7 @@ class RangeReader {
         fdcache_(options.env),
         manifest_reader_(manifest_),
         num_ranks_(0),
+        task_tracker_(options.env),
         logger_(options.env) {
     thpool_ = ThreadPool::NewFixed(options.parallelism);
   }
