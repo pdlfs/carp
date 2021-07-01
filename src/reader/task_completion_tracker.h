@@ -14,13 +14,13 @@ class TaskCompletionTracker {
 
   void Reset() {
     tasks_completed_ = 0;
-    ts_beg_map_.empty();
-    ts_io_map_.empty();
-    time_io_.empty();
-    time_total_.empty();
+    ts_beg_map_.clear();
+    ts_io_map_.clear();
+    time_io_.clear();
+    time_total_.clear();
   }
 
-  int MarkBegin() {
+  int MarkBegin(pid_t tid) {
     MutexLock ml(&mutex_);
     int id;
 
@@ -28,6 +28,7 @@ class TaskCompletionTracker {
       id = rand();
     } while (MAP_HAS(ts_beg_map_, id));
 
+    tid_rid_map_[tid] = id;
     ts_beg_map_[id] = env_->NowMicros();
 
     return id;
@@ -48,6 +49,13 @@ class TaskCompletionTracker {
       uint64_t cur_total = now - ts_beg_map_[id];
       time_io_.push_back(cur_io);
       time_total_.push_back(cur_total);
+
+      pid_t tid = tid_rid_map_[id];
+      if (!MAP_HAS(tid_total_map_, tid)) {
+        tid_total_map_[tid] = 0;
+      }
+
+      tid_total_map_[tid] += cur_total;
     }
 
     cv_.Signal();
@@ -83,7 +91,7 @@ class TaskCompletionTracker {
     double var = (sum_sq / n) - (avg * avg);
     double std = pow(var, 0.5);
 
-    logf(LOG_INFO, "Vec Stats, Avg: %.1d, Std: %.1d", avg, std);
+    logf(LOG_INFO, "Vec Stats, Avg: %.1lf, Std: %.1lf", avg, std);
 
     return sum;
   }
@@ -94,6 +102,8 @@ class TaskCompletionTracker {
   uint32_t tasks_completed_;
   std::map<int, uint64_t> ts_beg_map_;
   std::map<int, uint64_t> ts_io_map_;
+  std::map<pid_t, int> tid_rid_map_;
+  std::map<pid_t, uint64_t> tid_total_map_;
   std::vector<uint64_t> time_io_;
   std::vector<uint64_t> time_total_;
 };

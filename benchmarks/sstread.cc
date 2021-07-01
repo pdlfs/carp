@@ -22,7 +22,8 @@ class SimpleReader {
         dir_path_(options.data_path),
         num_ranks_(0),
         fdcache_(options.env),
-        thpool_(nullptr) {
+        thpool_(nullptr),
+        task_tracker_(options.env) {
     thpool_ = ThreadPool::NewFixed(options.parallelism);
   }
 

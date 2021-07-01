@@ -68,8 +68,8 @@ Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
   PartitionManifestMatch match_obj_in, match_obj;
   manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj);
 
-//  s = QueryMatchOptimizer::Optimize(match_obj_in, match_obj);
-  s = QueryMatchOptimizer::OptimizeSchedule(match_obj);
+  //  s = QueryMatchOptimizer::Optimize(match_obj_in, match_obj);
+  // s = QueryMatchOptimizer::OptimizeSchedule(match_obj);
   if (!s.ok()) return s;
 
   logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
@@ -171,8 +171,8 @@ Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path,
   for (size_t qi = 0; qi < queries.size(); qi++) {
     Query& q = queries[qi];
     char buf[1024];
-    int buf_len = snprintf(buf, 1024, "%d,%f,%f\n", q.epoch,
-                           q.range.range_min, q.range.range_max);
+    int buf_len = snprintf(buf, 1024, "%d,%f,%f\n", q.epoch, q.range.range_min,
+                           q.range.range_max);
     s = fd->Append(Slice(buf, buf_len));
     if (!s.ok()) return s;
   }
@@ -214,6 +214,13 @@ Status RangeReader<T>::ReadSSTs(PartitionManifestMatch& match,
   uint64_t mass_sum = 0;
   uint64_t key_sz, val_sz;
   match.GetKVSizes(key_sz, val_sz);
+
+  std::vector<int> ranks;
+  match.GetUniqueRanks(ranks);
+  if (!ranks.empty()) {
+    logf(LOG_INFO, "Matching Ranks, Count: %zu (Min: %d, Max: %d)\n",
+         ranks.size(), ranks[0], ranks[ranks.size() - 1]);
+  }
 
   for (uint32_t i = 0; i < match.Size(); i++) {
     PartitionManifestItem& item = match[i];

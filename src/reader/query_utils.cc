@@ -4,6 +4,10 @@
 
 #include "query_utils.h"
 
+#include <unistd.h>
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
+
 namespace pdlfs {
 namespace plfsio {
 Status QueryUtils::SummarizeManifest(PartitionManifest& manifest) {
@@ -95,6 +99,8 @@ void QueryUtils::SSTReadWorker(void* arg) {
   SSTReadWorkItem<T>* wi = static_cast<SSTReadWorkItem<T>*>(arg);
   Status s = Status::OK();
 
+  pid_t tid = gettid();
+
   int rank = wi->item->rank;
 
   Slice slice;
@@ -113,9 +119,11 @@ void QueryUtils::SSTReadWorker(void* arg) {
   ReadRequest req;
   req.offset = wi->item->offset;
   req.bytes = sst_sz;
+  // XXX: tmp
+  req.bytes = sst_sz / kvp_sz * key_sz;
   req.scratch = &scratch[0];
 
-  int req_id = wi->task_tracker->MarkBegin();
+  int req_id = wi->task_tracker->MarkBegin(tid);
 
   s = wi->fdcache->Read(rank, req, /* force-reopen */ false);
   if (!s.ok()) {
@@ -148,6 +156,8 @@ void QueryUtils::RankwiseSSTReadWorker(void* arg) {
       static_cast<RankwiseSSTReadWorkItem<T>*>(arg);
   Status s = Status::OK();
 
+  pid_t tid = gettid();
+
   int rank = wi->rank;
 
   const size_t key_sz = wi->key_sz;
@@ -174,7 +184,7 @@ void QueryUtils::RankwiseSSTReadWorker(void* arg) {
     req.item_count = item.part_item_count;
   }
 
-  int req_id = wi->task_tracker->MarkBegin();
+  int req_id = wi->task_tracker->MarkBegin(tid);
 
   s = wi->fdcache->ReadBatch(rank, req_vec);
   if (!s.ok()) {
