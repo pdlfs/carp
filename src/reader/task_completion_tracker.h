@@ -75,6 +75,27 @@ class TaskCompletionTracker {
 
     logf(LOG_INFO, "IO Sum: %.1fs, Total Sum: %.1fs", io_sum / 1e6,
          total_sum / 1e6);
+
+    std::vector<uint64_t> all_times;
+    uint64_t all_total = 0;
+    std::map<pid_t, uint64_t>::const_iterator it = tid_total_map_.cbegin();
+    for (; it != tid_total_map_.cend(); it++) {
+      uint64_t time_sec = it->second / 1e6;
+      all_times.push_back(time_sec);
+      all_total += time_sec;
+    }
+
+    std::sort(all_times.begin(), all_times.end());
+    std::string all_times_str;
+
+    for (size_t i = 0; i < all_times.size(); i++) {
+      all_times_str += std::to_string(all_times[i]) + " ";
+    }
+
+    logf(LOG_INFO,
+         "Thread-wise times, avg: %.1fs\n"
+         "Individual times: %s",
+         all_total * 1.0f / all_times.size(), all_times_str.c_str());
   }
 
  private:
