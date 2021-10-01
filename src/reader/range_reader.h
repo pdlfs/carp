@@ -111,11 +111,15 @@ class RangeReader {
 
   Status QuerySequential(int epoch, float rbegin, float rend);
 
+  Status QueryNaive(int epoch, float rbegin, float rend);
+
   Status AnalyzeManifest(const std::string& dir_path, bool query = false);
 
  private:
   static void ManifestReadWorker(void* arg);
 
+  /* query_results: this vector is resized according to match.GetMass()
+   * and is also overwritten to, starting from zero */
   Status ReadSSTs(PartitionManifestMatch& match,
                   std::vector<KeyPair>& query_results);
 

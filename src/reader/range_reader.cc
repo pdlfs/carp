@@ -11,8 +11,8 @@
 namespace pdlfs {
 namespace plfsio {
 
-template <typename T>
-Status RangeReader<T>::ReadManifest(const std::string& dir_path) {
+template < typename T >
+Status RangeReader< T >::ReadManifest(const std::string& dir_path) {
   logger_.RegisterBegin("MFREAD");
 
   Status s = Status::OK();
@@ -23,7 +23,7 @@ Status RangeReader<T>::ReadManifest(const std::string& dir_path) {
   manifest_reader_.EnableManifestOutput(dir_path);
 
   RandomAccessFile* src;
-  std::vector<ManifestReadWorkItem<T>> work_items;
+  std::vector< ManifestReadWorkItem< T > > work_items;
   work_items.resize(num_ranks_);
 
   task_tracker_.Reset();
@@ -60,8 +60,56 @@ Status RangeReader<T>::ReadManifest(const std::string& dir_path) {
   return s;
 }
 
-template <typename T>
-Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
+template < typename T >
+Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
+  logger_.RegisterBegin("SSTREAD");
+  Status s = Status::OK();
+  std::vector< KeyPair > matching_results;
+
+  for (int rank = 0; rank < manifest_.NumRanks(); rank++) {
+    PartitionManifestMatch match_obj_in, match_obj;
+    manifest_.GetAllEntries(epoch, rank, match_obj);
+
+    std::vector< KeyPair > query_results;
+    ReadSSTs(match_obj, query_results);
+    for (size_t qi = 0; qi < query_results.size(); qi++) {
+      KeyPair& kp = query_results[qi];
+      if (kp.key >= rbegin and kp.key < rend) {
+        matching_results.push_back(kp);
+      }
+    }
+  }
+
+
+  logger_.RegisterEnd("SSTREAD");
+  logger_.RegisterBegin("SORT");
+
+#if defined(PDLFS_TBB)
+  std::sort(std::execution::par, matching_results.begin(), matching_results.end(),
+            KeyPairComparator());
+#else
+  std::sort(matching_results.begin(), matching_results.end(), KeyPairComparator());
+#endif
+  logger_.RegisterEnd("SORT");
+
+  logf(LOG_INFO, "Query Results: %zu elements found\n", matching_results.size());
+
+#define ITEM(ptile) \
+  matching_results[((ptile) * (matching_results.size() - 1) / 100)].key
+
+  if (!matching_results.empty()) {
+    logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0),
+         ITEM(10), ITEM(50), ITEM(100));
+  }
+
+  logger_.PrintStats();
+  task_tracker_.AnalyzeTimes();
+
+  return s;
+}
+
+template < typename T >
+Status RangeReader< T >::QueryParallel(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
   Status s = Status::OK();
 
@@ -77,7 +125,7 @@ Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
 
   match_obj.Print();
 
-  std::vector<KeyPair> query_results;
+  std::vector< KeyPair > query_results;
   ReadSSTs(match_obj, query_results);
 
   logger_.RegisterEnd("SSTREAD");
@@ -110,8 +158,8 @@ Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {
   return s;
 }
 
-template <typename T>
-Status RangeReader<T>::QuerySequential(int epoch, float rbegin, float rend) {
+template < typename T >
+Status RangeReader< T >::QuerySequential(int epoch, float rbegin, float rend) {
   logger_.RegisterBegin("SSTREAD");
 
   PartitionManifestMatch match_obj;
@@ -147,9 +195,9 @@ Status RangeReader<T>::QuerySequential(int epoch, float rbegin, float rend) {
   return Status::OK();
 }
 
-template <typename T>
-Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path,
-                                       bool query) {
+template < typename T >
+Status RangeReader< T >::AnalyzeManifest(const std::string& dir_path,
+                                         bool query) {
   Status s = Status::OK();
   s = ReadManifest(dir_path);
   if (!s.ok()) return s;
@@ -160,7 +208,7 @@ Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path,
 
   if (!query) return s;
 
-  std::vector<Query> queries;
+  std::vector< Query > queries;
   s = QueryUtils::GenQueryPlan(manifest_, queries);
   if (!s.ok()) return s;
 
@@ -182,9 +230,10 @@ Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path,
   return s;
 }
 
-template <typename T>
-void RangeReader<T>::ManifestReadWorker(void* arg) {
-  ManifestReadWorkItem<T>* item = static_cast<ManifestReadWorkItem<T>*>(arg);
+template < typename T >
+void RangeReader< T >::ManifestReadWorker(void* arg) {
+  ManifestReadWorkItem< T >* item =
+      static_cast< ManifestReadWorkItem< T >* >(arg);
 
   RandomAccessFile* src;
   uint64_t src_sz;
@@ -200,13 +249,13 @@ void RangeReader<T>::ManifestReadWorker(void* arg) {
   item->task_tracker->MarkCompleted(0);
 }
 
-template <typename T>
-Status RangeReader<T>::ReadSSTs(PartitionManifestMatch& match,
-                                std::vector<KeyPair>& query_results) {
+template < typename T >
+Status RangeReader< T >::ReadSSTs(PartitionManifestMatch& match,
+                                  std::vector< KeyPair >& query_results) {
   Slice slice;
   std::string scratch;
 
-  std::vector<SSTReadWorkItem<T>> work_items;
+  std::vector< SSTReadWorkItem< T > > work_items;
   work_items.resize(match.Size());
   query_results.resize(match.TotalMass());
   task_tracker_.Reset();
@@ -215,7 +264,7 @@ Status RangeReader<T>::ReadSSTs(PartitionManifestMatch& match,
   uint64_t key_sz, val_sz;
   match.GetKVSizes(key_sz, val_sz);
 
-  std::vector<int> ranks;
+  std::vector< int > ranks;
   match.GetUniqueRanks(ranks);
   if (!ranks.empty()) {
     logf(LOG_INFO, "Matching Ranks, Count: %zu (Min: %d, Max: %d)\n",
@@ -235,7 +284,7 @@ Status RangeReader<T>::ReadSSTs(PartitionManifestMatch& match,
     work_items[i].fdcache = &fdcache_;
     work_items[i].task_tracker = &task_tracker_;
 
-    thpool_->Schedule(QueryUtils::SSTReadWorker<T>, (void*)&work_items[i]);
+    thpool_->Schedule(QueryUtils::SSTReadWorker< T >, (void*)&work_items[i]);
   }
 
   assert(mass_sum == match.TotalMass());
@@ -245,9 +294,9 @@ Status RangeReader<T>::ReadSSTs(PartitionManifestMatch& match,
   return Status::OK();
 }
 
-template <typename T>
-Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,
-                                        std::vector<KeyPair>& query_results) {
+template < typename T >
+Status RangeReader< T >::RankwiseReadSSTs(
+    PartitionManifestMatch& match, std::vector< KeyPair >& query_results) {
   Slice slice;
   std::string scratch;
 
@@ -257,10 +306,10 @@ Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,
   uint64_t key_sz, val_sz;
   match.GetKVSizes(key_sz, val_sz);
 
-  std::vector<int> ranks;
+  std::vector< int > ranks;
   match.GetUniqueRanks(ranks);
 
-  std::vector<RankwiseSSTReadWorkItem<T>> work_items;
+  std::vector< RankwiseSSTReadWorkItem< T > > work_items;
   work_items.resize(ranks.size());
   query_results.resize(match.TotalMass());
 
@@ -280,7 +329,7 @@ Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,
     work_items[i].fdcache = &fdcache_;
     work_items[i].task_tracker = &task_tracker_;
 
-    thpool_->Schedule(QueryUtils::RankwiseSSTReadWorker<T>,
+    thpool_->Schedule(QueryUtils::RankwiseSSTReadWorker< T >,
                       (void*)&work_items[i]);
   }
 
@@ -291,10 +340,10 @@ Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,
   return Status::OK();
 }
 
-template <typename T>
-void RangeReader<T>::ReadBlock(int rank, uint64_t offset, uint64_t size,
-                               Slice& slice, std::string& scratch,
-                               bool preview) {
+template < typename T >
+void RangeReader< T >::ReadBlock(int rank, uint64_t offset, uint64_t size,
+                                 Slice& slice, std::string& scratch,
+                                 bool preview) {
   Status s = Status::OK();
 
   scratch.resize(size);
@@ -324,7 +373,7 @@ void RangeReader<T>::ReadBlock(int rank, uint64_t offset, uint64_t size,
   }
 }
 
-template class RangeReader<SequentialFile>;
-template class RangeReader<RandomAccessFile>;
+template class RangeReader< SequentialFile >;
+template class RangeReader< RandomAccessFile >;
 }  // namespace plfsio
 }  // namespace pdlfs

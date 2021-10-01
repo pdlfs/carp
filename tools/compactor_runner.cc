@@ -16,11 +16,13 @@ void ParseOptions(int argc, char* argv[], RdbOptions& options) {
   extern char* optarg;
   extern int optind;
   int c;
-  while ((c = getopt(argc, argv, "i:")) != -1) {
+  while ((c = getopt(argc, argv, "i:e:")) != -1) {
     switch (c) {
       case 'i':
         options.data_path = optarg;
         break;
+      case 'e':
+        options.query_epoch = std::stoi(optarg);
       default:
         PrintHelp(argv[0]);
         exit(0);

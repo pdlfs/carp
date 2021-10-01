@@ -161,16 +161,16 @@ class PartitionManifestMatch {
     mass_oob_ += item.part_item_oob;
   }
 
-  void GetUniqueRanks(std::vector<int>& ranks) {
-    std::map<int, std::vector<size_t> >::const_iterator it = ranks_.cbegin();
+  void GetUniqueRanks(std::vector< int >& ranks) {
+    std::map< int, std::vector< size_t > >::const_iterator it = ranks_.cbegin();
     for (; it != ranks_.cend(); it++) {
       ranks.push_back(it->first);
     }
   }
 
   uint64_t GetMatchesByRank(int rank,
-                            std::vector<PartitionManifestItem>& rank_tables) {
-    std::vector<size_t>& rank_items = ranks_[rank];
+                            std::vector< PartitionManifestItem >& rank_tables) {
+    std::vector< size_t >& rank_items = ranks_[rank];
     uint64_t mass_rank = 0;
 
     for (size_t i = 0; i < rank_items.size(); i++) {
@@ -220,8 +220,8 @@ class PartitionManifestMatch {
     val_sz_ = val_sz;
   }
 
-  std::vector<PartitionManifestItem> items_;
-  std::map<int, std::vector<size_t> > ranks_;
+  std::vector< PartitionManifestItem > items_;
+  std::map< int, std::vector< size_t > > ranks_;
   uint64_t mass_data_;
   uint64_t mass_total_;
   uint64_t mass_oob_;
@@ -229,7 +229,7 @@ class PartitionManifestMatch {
   uint64_t val_sz_;
 
   friend class PartitionManifest;
-  template <typename U>
+  template < typename U >
   friend class SimpleReader;
   friend class QueryMatchOptimizer;
 };
@@ -243,7 +243,12 @@ class PartitionManifest {
         sizes_set_(false),
         key_sz_(0),
         val_sz_(0),
-        zero_sst_cnt_(0) {}
+        zero_sst_cnt_(0),
+        ranks_(0) {}
+
+  int GetAllEntries(int epoch, PartitionManifestMatch& match);
+
+  int GetAllEntries(int epoch, int rank, PartitionManifestMatch& match);
 
   int GetOverlappingEntries(int epoch, float point,
                             PartitionManifestMatch& match);
@@ -309,6 +314,8 @@ class PartitionManifest {
 
   size_t Size() const { return items_.size(); }
 
+  int NumRanks() const { return ranks_; }
+
  private:
   friend class PartitionManifestReader;
 
@@ -330,6 +337,7 @@ class PartitionManifest {
 
     mass_epoch_[item.epoch] += item.part_item_count;
     range_epoch_[item.epoch].Extend(item.observed);
+    ranks_ = std::max(ranks_, item.rank + 1);
   }
 
   Status UpdateKVSizes(const uint64_t key_sz, const uint64_t val_sz) {
@@ -346,15 +354,16 @@ class PartitionManifest {
     return s;
   }
 
-  std::vector<PartitionManifestItem> items_;
+  std::vector< PartitionManifestItem > items_;
   uint64_t mass_total_;
   int num_epochs_;
-  std::vector<uint64_t> mass_epoch_;
-  std::vector<Range> range_epoch_;
+  std::vector< uint64_t > mass_epoch_;
+  std::vector< Range > range_epoch_;
   bool sizes_set_;
   uint64_t key_sz_;
   uint64_t val_sz_;
   int zero_sst_cnt_;
+  int ranks_;
 };
 }  // namespace plfsio
 }  // namespace pdlfs

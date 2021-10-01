@@ -35,8 +35,8 @@ class CompactorLogger {
 
  private:
   Env* const env_;
-  std::vector<uint64_t> epoch_begins_;
-  std::vector<uint64_t> epoch_ends_;
+  std::vector< uint64_t > epoch_begins_;
+  std::vector< uint64_t > epoch_ends_;
 };
 
 class Compactor : public ReaderBase {
@@ -50,7 +50,8 @@ class Compactor : public ReaderBase {
     s = ReadManifests();
     if (!s.ok()) return s;
 
-    s = MergeAll();
+//    s = MergeAll();
+    s = MergeEpoch(options_.query_epoch);
 
     return s;
   }
@@ -61,7 +62,7 @@ class Compactor : public ReaderBase {
   static const size_t kMemMax = MB(500);
 
   struct PartitionedRun {
-    std::vector<PartitionManifestItem> items;
+    std::vector< PartitionManifestItem > items;
     float partition_point;
 
     PartitionedRun() : partition_point(0) {}
@@ -81,17 +82,18 @@ class Compactor : public ReaderBase {
     void Empty() { items.resize(0); }
   };
 
-  typedef std::map<int, std::vector<PartitionedRun>> EpochRunMap;
+  typedef std::map< int, std::vector< PartitionedRun > > EpochRunMap;
 
   bool MemoryFootprintExceeded(uint64_t item_cnt) const {
     return (item_cnt * val_sz_ > kMemMax);
   }
 
   Status MergeAll();
+  Status MergeEpoch(int epoch);
   Status ComputeRuns(EpochRunMap& run_map);
-  Status ComputeRunsForEpoch(std::vector<PartitionedRun>& runs, int epoch,
+  Status ComputeRunsForEpoch(std::vector< PartitionedRun >& runs, int epoch,
                              size_t& mf_idx);
-  std::string CreateDestDir() {
+  std::string CreateDestDir(int epoch = -1) {
     std::string dest = options_.data_path;
     if (dest[dest.size() - 1] == '/') dest.resize(dest.size() - 1);
     dest += ".merged";
@@ -99,6 +101,11 @@ class Compactor : public ReaderBase {
     Status s = options_.env->CreateDir(dest.c_str());
     if (!s.ok()) {
       printf("dir create error: %s\n", s.ToString().c_str());
+    }
+
+    if (epoch != -1) {
+      dest = dest + "/" + std::to_string(epoch);
+      s = options_.env->CreateDir(dest.c_str());
     }
 
     return dest;

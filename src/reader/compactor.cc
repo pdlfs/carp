@@ -30,7 +30,7 @@ Status Compactor::MergeAll() {
 
   std::string merge_dest = CreateDestDir();
 
-  size_t key_sz, val_sz;
+  uint64_t key_sz, val_sz;
   manifest_.GetKVSizes(key_sz, val_sz);
   SlidingSorter::SetKVSizes(key_sz, val_sz);
   SlidingSorter sorter(merge_dest, fdcache_);
@@ -65,6 +65,52 @@ Status Compactor::MergeAll() {
 
     logger_.MarkEpochEnd();
   }
+
+  sorter.Close();
+
+  logger_.PrintStats();
+
+  return s;
+}
+
+Status Compactor::MergeEpoch(int epoch) {
+  Status s = Status::OK();
+
+  std::string merge_dest = CreateDestDir(epoch);
+
+  uint64_t key_sz, val_sz;
+  manifest_.GetKVSizes(key_sz, val_sz);
+  SlidingSorter::SetKVSizes(key_sz, val_sz);
+  SlidingSorter sorter(merge_dest, fdcache_);
+
+  EpochRunMap run_map;
+  s = ComputeRuns(run_map);
+  if (!s.ok()) return s;
+
+#define EXISTS(map, epoch) ((map).find(epoch) != (map).end())
+
+  logf(LOG_INFO, "currently sorting: epoch %d\n", epoch);
+  logger_.MarkEpochBegin();
+
+  std::vector<PartitionedRun>& runs = run_map[epoch];
+
+  sorter.EpochBegin();
+
+  for (size_t i = 0; i < runs.size(); i++) {
+    PartitionedRun& run = runs[i];
+    for (size_t ri = 0; ri < run.items.size(); ri++) {
+      PartitionManifestItem& item = run.items[ri];
+      sorter.AddManifestItem(item);
+    }
+    logf(LOG_DBUG, "Sorting until: %f\n", run.partition_point);
+    sorter.FlushUntil(run.partition_point);
+  }
+
+  /* PartitionedRun has a FLT_MAX entry, so this is unnecessary, but just to
+   * be safe, we call it explicitly */
+  sorter.FlushAll();
+
+  logger_.MarkEpochEnd();
 
   sorter.Close();
 

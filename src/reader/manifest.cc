@@ -10,6 +10,39 @@
 
 namespace pdlfs {
 namespace plfsio {
+int PartitionManifest::GetAllEntries(int epoch, PartitionManifestMatch& match) {
+  for (size_t i = 0; i < items_.size(); i++) {
+    if (items_[i].epoch == epoch) {
+      match.AddItem(items_[i]);
+    }
+  }
+
+  uint64_t mass_epoch = mass_epoch_[epoch];
+
+  assert(sizes_set_);
+  match.SetKVSizes(key_sz_, val_sz_);
+  match.SetDataSize(mass_epoch);
+
+  return 0;
+}
+
+int PartitionManifest::GetAllEntries(int epoch, int rank,
+                                     PartitionManifestMatch& match) {
+  for (size_t i = 0; i < items_.size(); i++) {
+    if (items_[i].epoch == epoch and items_[i].rank == rank) {
+      match.AddItem(items_[i]);
+    }
+  }
+
+  uint64_t mass_epoch = mass_epoch_[epoch];
+
+  assert(sizes_set_);
+  match.SetKVSizes(key_sz_, val_sz_);
+  match.SetDataSize(mass_epoch);
+
+  return 0;
+}
+
 int PartitionManifest::GetOverlappingEntries(int epoch, float point,
                                              PartitionManifestMatch& match) {
   for (size_t i = 0; i < items_.size(); i++) {
@@ -89,11 +122,11 @@ Status PartitionManifest::GenOverlapStats(const char* dir_path,
   return Status::OK();
 }
 
-static std::vector<float> GenPoints(float rbeg, float rend) {
+static std::vector< float > GenPoints(float rbeg, float rend) {
   float cutoffs[] = {rbeg, 2, 5, 10, 20, 50, 100};
   float deltas[] = {0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0};
 
-  std::vector<float> probe_points;
+  std::vector< float > probe_points;
 
   int ni = sizeof(cutoffs) / sizeof(cutoffs[0]);
   for (int i = ni - 1; i >= 0; i--) {
@@ -130,7 +163,7 @@ void PartitionManifest::GenEpochStatsCSV(const int epoch,
 
   uint64_t max_match_mass = 0;
 
-  std::vector<float> probe_points = GenPoints(rbeg, rend);
+  std::vector< float > probe_points = GenPoints(rbeg, rend);
 
   for (size_t i = 0; i < probe_points.size(); i++) {
     float r = probe_points[i];
