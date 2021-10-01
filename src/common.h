@@ -55,6 +55,7 @@ namespace plfsio {
 typedef struct RdbOptions {
   Env* env;
   std::string data_path;
+  std::string output_path;
   uint32_t parallelism;
   bool analytics_on;
 

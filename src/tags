@@ -1,0 +1,389 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+AddManifestItem	reader/sliding_sorter.cc	/^Status SlidingSorter::AddManifestItem(const PartitionManifestItem& item) {$/;"	f	class:pdlfs::plfsio::SlidingSorter
+AddPair	reader/sliding_sorter.h	/^  void AddPair(float key, Slice& val) { merge_pool_.push(KVItem(key, val)); }$/;"	f	class:pdlfs::plfsio::SlidingSorter
+AddSST	reader/sliding_sorter.h	/^  void AddSST(const Slice& data, size_t item_sz, uint64_t num_items) {$/;"	f	class:pdlfs::plfsio::SlidingSorter
+AdvanceDir	reader/plfs_writer.h	/^  Status AdvanceDir() {$/;"	f	class:pdlfs::plfsio::PlfsWriter
+AnalyzeManifest	reader/range_reader.cc	/^Status RangeReader<T>::AnalyzeManifest(const std::string& dir_path, bool query) {$/;"	f	class:pdlfs::plfsio::RangeReader
+Append	reader/plfs_wrapper.h	/^  Status Append(float key, Slice& val) {$/;"	f	class:pdlfs::plfsio::PlfsWrapper
+Append	reader/plfs_writer.h	/^  Status Append(float key, Slice& val) {$/;"	f	class:pdlfs::plfsio::PlfsWriter
+CachingDirReader	reader/file_cache.h	/^  CachingDirReader(Env* env, int max_cache_size = 512)$/;"	f	class:pdlfs::plfsio::CachingDirReader
+CachingDirReader	reader/file_cache.h	/^class CachingDirReader {$/;"	c	namespace:pdlfs::plfsio
+CalculatePivots	carp/carp_utils.cc	/^int PivotUtils::CalculatePivots(CarpBase* carp, const size_t num_pivots) {$/;"	f	class:pdlfs::carp::PivotUtils
+CalculatePivotsFromAll	carp/carp_utils.cc	/^int PivotUtils::CalculatePivotsFromAll(CarpBase* carp, int num_pivots) {$/;"	f	class:pdlfs::carp::PivotUtils
+CalculatePivotsFromOob	carp/carp_utils.cc	/^int PivotUtils::CalculatePivotsFromOob(CarpBase* carp, int num_pivots) {$/;"	f	class:pdlfs::carp::PivotUtils
+CarpBase	carp/carp_base.h	/^class CarpBase {$/;"	c	namespace:pdlfs::carp
+Close	reader/sliding_sorter.h	/^  Status Close() {$/;"	f	class:pdlfs::plfsio::SlidingSorter
+CloseDir	reader/plfs_wrapper.h	/^  Status CloseDir() {$/;"	f	class:pdlfs::plfsio::PlfsWrapper
+CloseDir	reader/plfs_writer.h	/^  Status CloseDir() {$/;"	f	class:pdlfs::plfsio::PlfsWriter
+ClosestDistance	reader/query_utils.h	/^  static float ClosestDistance(std::vector<float>& v, float f) {$/;"	f	class:pdlfs::plfsio::QueryUtils
+Compactor	reader/compactor.h	/^  explicit Compactor(const RdbOptions& options)$/;"	f	class:pdlfs::plfsio::Compactor
+Compactor	reader/compactor.h	/^class Compactor : public ReaderBase {$/;"	c	namespace:pdlfs::plfsio
+CompactorLogger	reader/compactor.h	/^  explicit CompactorLogger(Env* const env) : env_(env) {}$/;"	f	class:pdlfs::plfsio::CompactorLogger
+CompactorLogger	reader/compactor.h	/^class CompactorLogger {$/;"	c	namespace:pdlfs::plfsio
+ComputeInternalOffsets	reader/manifest_reader.h	/^  static void ComputeInternalOffsets(const size_t entry_sizes[],$/;"	f	class:pdlfs::plfsio::PartitionManifestReader
+ComputeRuns	reader/compactor.cc	/^Status Compactor::ComputeRuns(Compactor::EpochRunMap& run_map) {$/;"	f	class:pdlfs::plfsio::Compactor
+ComputeRunsForEpoch	reader/compactor.cc	/^Status Compactor::ComputeRunsForEpoch(std::vector<PartitionedRun>& runs,$/;"	f	class:pdlfs::plfsio::Compactor
+CreateDestDir	reader/compactor.h	/^  std::string CreateDestDir() {$/;"	f	class:pdlfs::plfsio::Compactor
+ERRLIM	carp/carp_utils.cc	289;"	d	file:
+EXISTS	reader/compactor.cc	42;"	d	file:
+Empty	reader/compactor.h	/^    void Empty() { items.resize(0); }$/;"	f	struct:pdlfs::plfsio::Compactor::PartitionedRun
+EnableManifestOutput	reader/manifest_reader.h	/^  void EnableManifestOutput(std::string out_path) { output_path_ = out_path; }$/;"	f	class:pdlfs::plfsio::PartitionManifestReader
+EnsurePlfs	reader/sliding_sorter.h	/^  void EnsurePlfs() {$/;"	f	class:pdlfs::plfsio::SlidingSorter
+EpochBegin	reader/sliding_sorter.h	/^  Status EpochBegin() {$/;"	f	class:pdlfs::plfsio::SlidingSorter
+EpochFlush	reader/plfs_wrapper.h	/^  Status EpochFlush() {$/;"	f	class:pdlfs::plfsio::PlfsWrapper
+EpochFlush	reader/plfs_writer.h	/^  Status EpochFlush() {$/;"	f	class:pdlfs::plfsio::PlfsWriter
+EpochRunMap	reader/compactor.h	/^  typedef std::map<int, std::vector<PartitionedRun>> EpochRunMap;$/;"	t	class:pdlfs::plfsio::Compactor
+FileCacheEntry	reader/file_cache.h	/^struct FileCacheEntry {$/;"	s	namespace:pdlfs::plfsio
+FloatUtils	common.h	/^class FloatUtils {$/;"	c	namespace:pdlfs::carp
+Flush	reader/plfs_wrapper.h	/^  Status Flush() {$/;"	f	class:pdlfs::plfsio::PlfsWrapper
+Flush	reader/plfs_writer.h	/^  Status Flush() {$/;"	f	class:pdlfs::plfsio::PlfsWriter
+FlushAll	reader/sliding_sorter.h	/^  Status FlushAll() {$/;"	f	class:pdlfs::plfsio::SlidingSorter
+FlushUntil	reader/sliding_sorter.h	/^  Status FlushUntil(float cutoff) {$/;"	f	class:pdlfs::plfsio::SlidingSorter
+FmtChecker	reader/fmt_checker.h	/^  explicit FmtChecker(const RdbOptions& options) : ReaderBase(options) {}$/;"	f	class:pdlfs::plfsio::FmtChecker
+FmtChecker	reader/fmt_checker.h	/^class FmtChecker : public ReaderBase {$/;"	c	namespace:pdlfs::plfsio
+GenEpochStatsCSV	reader/manifest.cc	/^void PartitionManifest::GenEpochStatsCSV(const int epoch,$/;"	f	class:pdlfs::plfsio::PartitionManifest
+GenOverlapStats	reader/manifest.cc	/^Status PartitionManifest::GenOverlapStats(const char* dir_path,$/;"	f	class:pdlfs::plfsio::PartitionManifest
+GenPoints	reader/manifest.cc	/^static std::vector<float> GenPoints(float rbeg, float rend) {$/;"	f	namespace:pdlfs::plfsio
+GenQueries	reader/query_utils.cc	/^Status QueryUtils::GenQueries(PartitionManifest& manifest, int epoch,$/;"	f	class:pdlfs::plfsio::QueryUtils
+GenQueryPlan	reader/query_utils.cc	/^Status QueryUtils::GenQueryPlan(PartitionManifest& manifest,$/;"	f	class:pdlfs::plfsio::QueryUtils
+GetEventDelta	perf.h	/^  uint64_t GetEventDelta(const char* event) {$/;"	f	class:pdlfs::plfsio::RangeReaderPerfLogger
+GetFileHandle	reader/file_cache.cc	/^Status CachingDirReader<RandomAccessFile>::GetFileHandle(int rank, RandomAccessFile** fh, uint64_t* fsz,$/;"	f	class:pdlfs::plfsio::CachingDirReader
+GetFileHandle	reader/file_cache.cc	/^Status CachingDirReader<SequentialFile>::GetFileHandle(int rank, SequentialFile** fh, uint64_t* fsz,$/;"	f	class:pdlfs::plfsio::CachingDirReader
+GetFileSize	reader/file_cache.cc	/^Status CachingDirReader<T>::GetFileSize(int rank, uint64_t* fsz) {$/;"	f	class:pdlfs::plfsio::CachingDirReader
+GetOverlappingEntries	reader/manifest.cc	/^int PartitionManifest::GetOverlappingEntries(Query& q,$/;"	f	class:pdlfs::plfsio::PartitionManifest
+GetOverlappingEntries	reader/manifest.cc	/^int PartitionManifest::GetOverlappingEntries(int epoch, float point,$/;"	f	class:pdlfs::plfsio::PartitionManifest
+GetOverlappingEntries	reader/manifest.cc	/^int PartitionManifest::GetOverlappingEntries(int epoch, float range_begin,$/;"	f	class:pdlfs::plfsio::PartitionManifest
+GetRangeBounds	carp/carp_utils.cc	/^int PivotUtils::GetRangeBounds(CarpBase* carp, std::vector<float>& oobl,$/;"	f	class:pdlfs::carp::PivotUtils
+Hello	reader/reader-test.cc	/^  void Hello() { printf("hello world!\\n"); }$/;"	f	class:pdlfs::plfsio::ReaderTest
+ITEM	reader/range_reader.cc	90;"	d	file:
+IsOpen	reader/plfs_wrapper.h	/^  bool IsOpen() const { return plfshdl_ != nullptr; }$/;"	f	class:pdlfs::plfsio::PlfsWrapper
+IsOpen	reader/plfs_writer.h	/^  bool IsOpen() const { return (plfs_ != nullptr); }$/;"	f	class:pdlfs::plfsio::PlfsWriter
+ItemsWithinRange	reader/query_utils.h	/^  static int ItemsWithinRange(std::vector<float>& v, float f, float rmax) {$/;"	f	class:pdlfs::plfsio::QueryUtils
+KB	common.h	52;"	d
+KB	reader/file_cache.h	49;"	d
+KVItem	reader/sliding_sorter.h	/^    KVItem(const KVItem& other) {$/;"	f	struct:pdlfs::plfsio::SlidingSorter::KVItem
+KVItem	reader/sliding_sorter.h	/^    KVItem(float key_arg, Slice& val_arg) : key(key_arg) {$/;"	f	struct:pdlfs::plfsio::SlidingSorter::KVItem
+KVItem	reader/sliding_sorter.h	/^  struct KVItem {$/;"	s	class:pdlfs::plfsio::SlidingSorter
+KeyPair	reader/range_reader.h	/^struct KeyPair {$/;"	s	namespace:pdlfs::plfsio
+KeyPairComparator	reader/range_reader.h	/^struct KeyPairComparator {$/;"	s	namespace:pdlfs::plfsio
+LOG_DBG2	common.h	15;"	d
+LOG_DBUG	common.h	14;"	d
+LOG_ERRO	common.h	11;"	d
+LOG_INFO	common.h	13;"	d
+LOG_LVL	common.h	17;"	d
+LOG_WARN	common.h	12;"	d
+LogQuery	perf.h	/^  Status LogQuery(const char* dir_path, int epoch, float qbeg, float qend,$/;"	f	class:pdlfs::plfsio::RangeReaderPerfLogger
+LogSST	reader/fmt_checker.h	/^  static void LogSST(PartitionManifestItem meta, Slice& data) {$/;"	f	class:pdlfs::plfsio::FmtChecker
+MAP_HAS	perf.h	81;"	d
+MAP_HAS	perf.h	85;"	d
+MAP_HAS	reader/file_cache.cc	14;"	d	file:
+MB	common.h	53;"	d
+MICROS	perf.h	9;"	d
+MILLION	reader/plfs_writer.h	96;"	d
+MILLION	reader/plfs_writer.h	98;"	d
+ManifestReadWorkItem	reader/range_reader.h	/^struct ManifestReadWorkItem {$/;"	s	namespace:pdlfs::plfsio
+ManifestReadWorker	reader/range_reader.cc	/^void RangeReader<T>::ManifestReadWorker(void* arg) {$/;"	f	class:pdlfs::plfsio::RangeReader
+MarkCompleted	reader/task_completion_tracker.h	/^  void MarkCompleted() {$/;"	f	class:pdlfs::plfsio::TaskCompletionTracker
+MarkEpochBegin	reader/compactor.h	/^  void MarkEpochBegin() {$/;"	f	class:pdlfs::plfsio::CompactorLogger
+MarkEpochEnd	reader/compactor.h	/^  void MarkEpochEnd() {$/;"	f	class:pdlfs::plfsio::CompactorLogger
+MemoryFootprintExceeded	reader/compactor.h	/^  bool MemoryFootprintExceeded(uint64_t item_cnt) const {$/;"	f	class:pdlfs::plfsio::Compactor
+MergeAll	reader/compactor.cc	/^Status Compactor::MergeAll() {$/;"	f	class:pdlfs::plfsio::Compactor
+NumRanks	reader/file_cache.h	/^  int NumRanks() const { return num_ranks_; }$/;"	f	class:pdlfs::plfsio::CachingDirReader
+OpenDir	reader/plfs_wrapper.cc	/^Status PlfsWrapper::OpenDir(const char* path, int rank) {$/;"	f	class:pdlfs::plfsio::PlfsWrapper
+OpenDir	reader/plfs_writer.h	/^  Status OpenDir(const char* path) {$/;"	f	class:pdlfs::plfsio::PlfsWriter
+OpenDirInternal	reader/plfs_wrapper.cc	/^Status PlfsWrapper::OpenDirInternal(const char* path, int rank) {$/;"	f	class:pdlfs::plfsio::PlfsWrapper
+OpenFileHandle	reader/file_cache.cc	/^Status CachingDirReader<RandomAccessFile>::OpenFileHandle(int rank,$/;"	f	class:pdlfs::plfsio::CachingDirReader
+OpenFileHandle	reader/file_cache.cc	/^Status CachingDirReader<SequentialFile>::OpenFileHandle(int rank,$/;"	f	class:pdlfs::plfsio::CachingDirReader
+PCT	reader/query_utils.h	12;"	d
+PDLFS_TBB	tbb_check.h	12;"	d
+PDLFS_TBB	tbb_check.h	15;"	d
+PDLFS_TBB	tbb_check.h	35;"	d
+ParsedFooter	reader/file_cache.h	/^typedef struct ParsedFooter ParsedFooter;$/;"	t	namespace:pdlfs::plfsio	typeref:struct:pdlfs::plfsio::ParsedFooter
+ParsedFooter	reader/reader_base.h	/^struct ParsedFooter {$/;"	s	namespace:pdlfs::plfsio
+PartitionManifestReader	reader/manifest_reader.cc	/^PartitionManifestReader::PartitionManifestReader(PartitionManifest& manifest)$/;"	f	class:pdlfs::plfsio::PartitionManifestReader
+PartitionManifestReader	reader/manifest_reader.h	/^class PartitionManifestReader {$/;"	c	namespace:pdlfs::plfsio
+PartitionedRun	reader/compactor.h	/^    PartitionedRun() : partition_point(0) {}$/;"	f	struct:pdlfs::plfsio::Compactor::PartitionedRun
+PartitionedRun	reader/compactor.h	/^    PartitionedRun(const PartitionedRun& rhs)$/;"	f	struct:pdlfs::plfsio::Compactor::PartitionedRun
+PartitionedRun	reader/compactor.h	/^  struct PartitionedRun {$/;"	s	class:pdlfs::plfsio::Compactor
+PivotUtils	carp/carp_utils.h	/^class PivotUtils {$/;"	c	namespace:pdlfs::carp
+PlfsOpts	reader/plfs_wrapper.h	/^struct PlfsOpts {$/;"	s	namespace:pdlfs::plfsio
+PlfsWrapper	reader/plfs_wrapper.h	/^  PlfsWrapper()$/;"	f	class:pdlfs::plfsio::PlfsWrapper
+PlfsWrapper	reader/plfs_wrapper.h	/^class PlfsWrapper {$/;"	c	namespace:pdlfs::plfsio
+PlfsWriter	reader/plfs_writer.h	/^  PlfsWriter()$/;"	f	class:pdlfs::plfsio::PlfsWriter
+PlfsWriter	reader/plfs_writer.h	/^class PlfsWriter {$/;"	c	namespace:pdlfs::plfsio
+Print	reader/manifest.cc	/^void PartitionManifestMatch::Print() {$/;"	f	class:pdlfs::plfsio::PartitionManifestMatch
+PrintSingleStat	perf.h	/^  uint64_t PrintSingleStat(const char* evt_name) {$/;"	f	class:pdlfs::plfsio::RangeReaderPerfLogger
+PrintStats	perf.h	/^  void PrintStats() {$/;"	f	class:pdlfs::plfsio::RangeReaderPerfLogger
+PrintStats	reader/compactor.cc	/^void CompactorLogger::PrintStats() {$/;"	f	class:pdlfs::plfsio::CompactorLogger
+QueryParallel	reader/range_reader.cc	/^Status RangeReader<T>::QueryParallel(int epoch, float rbegin, float rend) {$/;"	f	class:pdlfs::plfsio::RangeReader
+QueryParallel	reader/range_reader.h	/^  Status QueryParallel(Query q) {$/;"	f	class:pdlfs::plfsio::RangeReader
+QueryParallel	reader/range_reader.h	/^  Status QueryParallel(std::vector<Query> qvec) {$/;"	f	class:pdlfs::plfsio::RangeReader
+QuerySequential	reader/range_reader.cc	/^Status RangeReader<T>::QuerySequential(int epoch, float rbegin, float rend) {$/;"	f	class:pdlfs::plfsio::RangeReader
+QueryUtils	reader/query_utils.h	/^class QueryUtils {$/;"	c	namespace:pdlfs::plfsio
+RangeReader	reader/range_reader.h	/^  RangeReader(const RdbOptions& options)$/;"	f	class:pdlfs::plfsio::RangeReader
+RangeReader	reader/range_reader.h	/^class RangeReader {$/;"	c	namespace:pdlfs::plfsio
+RangeReaderPerfLogger	perf.h	/^  explicit RangeReaderPerfLogger(Env* env) : env_(env){};$/;"	f	class:pdlfs::plfsio::RangeReaderPerfLogger
+RangeReaderPerfLogger	perf.h	/^class RangeReaderPerfLogger {$/;"	c	namespace:pdlfs::plfsio
+RankwiseReadSSTs	reader/range_reader.cc	/^Status RangeReader<T>::RankwiseReadSSTs(PartitionManifestMatch& match,$/;"	f	class:pdlfs::plfsio::RangeReader
+RankwiseSSTReadWorkItem	reader/range_reader.h	/^struct RankwiseSSTReadWorkItem {$/;"	s	namespace:pdlfs::plfsio
+RankwiseSSTReadWorker	reader/query_utils.cc	/^void QueryUtils::RankwiseSSTReadWorker(void* arg) {$/;"	f	class:pdlfs::plfsio::QueryUtils
+RdbName	reader/file_cache.h	/^  std::string RdbName(const std::string& parent, int rank) {$/;"	f	class:pdlfs::plfsio::CachingDirReader
+RdbOptions	common.h	/^  RdbOptions()$/;"	f	struct:pdlfs::plfsio::RdbOptions
+RdbOptions	common.h	/^typedef struct RdbOptions {$/;"	s	namespace:pdlfs::plfsio
+RdbOptions	common.h	/^} RdbOptions;$/;"	t	namespace:pdlfs::plfsio	typeref:struct:pdlfs::plfsio::RdbOptions
+Read	reader/file_cache.cc	/^Status CachingDirReader<RandomAccessFile>::Read(int rank, ReadRequest& request,$/;"	f	class:pdlfs::plfsio::CachingDirReader
+Read	reader/file_cache.cc	/^Status CachingDirReader<SequentialFile>::Read(int rank, ReadRequest& request,$/;"	f	class:pdlfs::plfsio::CachingDirReader
+ReadBatch	reader/file_cache.cc	/^Status CachingDirReader<RandomAccessFile>::ReadBatch($/;"	f	class:pdlfs::plfsio::CachingDirReader
+ReadBatch	reader/file_cache.cc	/^Status CachingDirReader<SequentialFile>::ReadBatch($/;"	f	class:pdlfs::plfsio::CachingDirReader
+ReadBlock	reader/range_reader.cc	/^void RangeReader<T>::ReadBlock(int rank, uint64_t offset, uint64_t size,$/;"	f	class:pdlfs::plfsio::RangeReader
+ReadDirectory	reader/file_cache.cc	/^Status CachingDirReader<T>::ReadDirectory(std::string dir, int& num_ranks) {$/;"	f	class:pdlfs::plfsio::CachingDirReader
+ReadFooter	reader/file_cache.cc	/^Status CachingDirReader<T>::ReadFooter(int rank, ParsedFooter& parsed_footer,$/;"	f	class:pdlfs::plfsio::CachingDirReader
+ReadFooterEpoch	reader/manifest_reader.cc	/^void PartitionManifestReader::ReadFooterEpoch(int epoch, int rank, Slice& data,$/;"	f	class:pdlfs::plfsio::PartitionManifestReader
+ReadManifest	reader/manifest_reader.cc	/^Status PartitionManifestReader::ReadManifest(int rank, Slice& footer_data,$/;"	f	class:pdlfs::plfsio::PartitionManifestReader
+ReadManifest	reader/range_reader.cc	/^Status RangeReader<T>::ReadManifest(const std::string& dir_path) {$/;"	f	class:pdlfs::plfsio::RangeReader
+ReadManifests	reader/reader_base.cc	/^Status ReaderBase::ReadManifests() {$/;"	f	class:pdlfs::plfsio::ReaderBase
+ReadRequest	reader/file_cache.h	/^struct ReadRequest {$/;"	s	namespace:pdlfs::plfsio
+ReadSST	reader/reader_base.cc	/^Status ReaderBase::ReadSST(const PartitionManifestItem& item, Slice& sst,$/;"	f	class:pdlfs::plfsio::ReaderBase
+ReadSSTs	reader/range_reader.cc	/^Status RangeReader<T>::ReadSSTs(PartitionManifestMatch& match,$/;"	f	class:pdlfs::plfsio::RangeReader
+ReaderBase	reader/reader_base.h	/^  ReaderBase(const RdbOptions options)$/;"	f	class:pdlfs::plfsio::ReaderBase
+ReaderBase	reader/reader_base.h	/^class ReaderBase {$/;"	c	namespace:pdlfs::plfsio
+ReaderTest	reader/reader-test.cc	/^class ReaderTest {$/;"	c	namespace:pdlfs::plfsio	file:
+RegisterBegin	perf.h	/^  void RegisterBegin(const char* key) { ts_begin_[key] = env_->NowMicros(); }$/;"	f	class:pdlfs::plfsio::RangeReaderPerfLogger
+RegisterEnd	perf.h	/^  void RegisterEnd(const char* key) { ts_end_[key] = env_->NowMicros(); }$/;"	f	class:pdlfs::plfsio::RangeReaderPerfLogger
+Reset	reader/task_completion_tracker.h	/^  void Reset() { tasks_completed_ = 0; }$/;"	f	class:pdlfs::plfsio::TaskCompletionTracker
+Run	reader/compactor.h	/^  Status Run() {$/;"	f	class:pdlfs::plfsio::Compactor
+Run	reader/fmt_checker.h	/^  Status Run() {$/;"	f	class:pdlfs::plfsio::FmtChecker
+SSTReadWorkItem	reader/range_reader.h	/^struct SSTReadWorkItem {$/;"	s	namespace:pdlfs::plfsio
+SSTReadWorker	reader/query_utils.cc	/^void QueryUtils::SSTReadWorker(void* arg) {$/;"	f	class:pdlfs::plfsio::QueryUtils
+SerializeVector	carp/carp_utils.cc	/^std::string PivotUtils::SerializeVector(T* v, size_t vsz) {$/;"	f	class:pdlfs::carp::PivotUtils
+SerializeVector	carp/carp_utils.cc	/^std::string PivotUtils::SerializeVector(std::vector<T>& v) {$/;"	f	class:pdlfs::carp::PivotUtils
+SetKVSizes	reader/sliding_sorter.h	/^  static void SetKVSizes(size_t key_sz, size_t val_sz) {$/;"	f	class:pdlfs::plfsio::SlidingSorter
+SlidingSorter	reader/sliding_sorter.h	/^  explicit SlidingSorter(std::string dir_out,$/;"	f	class:pdlfs::plfsio::SlidingSorter
+SlidingSorter	reader/sliding_sorter.h	/^class SlidingSorter {$/;"	c	namespace:pdlfs::plfsio
+SortByKey	reader/compactor.h	/^    void SortByKey() {$/;"	f	struct:pdlfs::plfsio::Compactor::PartitionedRun
+SortByOffset	reader/compactor.h	/^    void SortByOffset() {$/;"	f	struct:pdlfs::plfsio::Compactor::PartitionedRun
+SummarizeManifest	reader/query_utils.cc	/^Status QueryUtils::SummarizeManifest(PartitionManifest& manifest) {$/;"	f	class:pdlfs::plfsio::QueryUtils
+TEST	reader/reader-test.cc	/^TEST(ReaderTest, PlfsTest) {$/;"	f	namespace:pdlfs::plfsio
+TEST	reader/reader-test.cc	/^TEST(ReaderTest, QuerySanityCheck) {$/;"	f	namespace:pdlfs::plfsio
+TaskCompletionTracker	reader/task_completion_tracker.h	/^  TaskCompletionTracker() : cv_(&mutex_), tasks_completed_(0) {}$/;"	f	class:pdlfs::plfsio::TaskCompletionTracker
+TaskCompletionTracker	reader/task_completion_tracker.h	/^class TaskCompletionTracker {$/;"	c	namespace:pdlfs::plfsio
+ThreadSafetyWarning	reader/query_utils.cc	/^void QueryUtils::ThreadSafetyWarning<RandomAccessFile>() {}$/;"	f	class:pdlfs::plfsio::QueryUtils
+ThreadSafetyWarning	reader/query_utils.cc	/^void QueryUtils::ThreadSafetyWarning<SequentialFile>() {$/;"	f	class:pdlfs::plfsio::QueryUtils
+UpdateKVSizes	reader/manifest_reader.h	/^  Status UpdateKVSizes(uint64_t key_sz, uint64_t val_sz) {$/;"	f	class:pdlfs::plfsio::PartitionManifestReader
+UpdatePivots	carp/carp_base.h	/^  virtual void UpdatePivots(double* pivots, int num_pivots) {$/;"	f	class:pdlfs::carp::CarpBase
+ValidateSST	reader/fmt_checker.h	/^  static bool ValidateSST(PartitionManifestItem meta, Slice& data) {$/;"	f	class:pdlfs::plfsio::FmtChecker
+WaitUntilCompleted	reader/task_completion_tracker.h	/^  void WaitUntilCompleted(uint32_t target) {$/;"	f	class:pdlfs::plfsio::TaskCompletionTracker
+analytics_on	common.h	/^  bool analytics_on;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+bgdepth	reader/plfs_wrapper.h	/^  int bgdepth;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+bits_per_key	reader/plfs_wrapper.h	/^  int bits_per_key;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+bytes	reader/file_cache.h	/^  uint64_t bytes;$/;"	m	struct:pdlfs::plfsio::ReadRequest
+cache_	reader/file_cache.h	/^  std::map<int, FileCacheEntry<T> > cache_;$/;"	m	class:pdlfs::plfsio::CachingDirReader
+carp	carp/carp_base.h	/^namespace carp {$/;"	n	namespace:pdlfs
+carp	carp/carp_utils.cc	/^namespace carp {$/;"	n	namespace:pdlfs	file:
+carp	carp/carp_utils.h	/^namespace carp {$/;"	n	namespace:pdlfs
+carp	common.h	/^namespace carp {$/;"	n	namespace:pdlfs
+cur_rank_wrcnt_	reader/plfs_writer.h	/^  uint64_t cur_rank_wrcnt_;$/;"	m	class:pdlfs::plfsio::PlfsWriter
+cv_	carp/carp_base.h	/^  port::CondVar cv_;$/;"	m	class:pdlfs::carp::CarpBase
+cv_	reader/task_completion_tracker.h	/^  port::CondVar cv_;$/;"	m	class:pdlfs::plfsio::TaskCompletionTracker
+data_path	common.h	/^  std::string data_path;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+dir_	reader/file_cache.h	/^  std::string dir_;$/;"	m	class:pdlfs::plfsio::CachingDirReader
+dir_out_	reader/sliding_sorter.h	/^  std::string dir_out_;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+dir_path_	reader/range_reader.h	/^  std::string dir_path_;$/;"	m	class:pdlfs::plfsio::RangeReader
+entry_sizes_	reader/manifest_reader.h	/^  size_t entry_sizes_[num_entries_];$/;"	m	class:pdlfs::plfsio::PartitionManifestReader
+env	common.h	/^  Env* env;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+env	reader/plfs_wrapper.h	/^  const char* env;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+env_	perf.h	/^  Env* const env_;$/;"	m	class:pdlfs::plfsio::RangeReaderPerfLogger
+env_	reader/compactor.h	/^  Env* const env_;$/;"	m	class:pdlfs::plfsio::CompactorLogger
+env_	reader/file_cache.h	/^  Env* const env_;$/;"	m	class:pdlfs::plfsio::CachingDirReader
+epoch_	reader/plfs_wrapper.h	/^  int epoch_;$/;"	m	class:pdlfs::plfsio::PlfsWrapper
+epoch_	reader/plfs_writer.h	/^  int epoch_;$/;"	m	class:pdlfs::plfsio::PlfsWriter
+epoch_begins_	reader/compactor.h	/^  std::vector<uint64_t> epoch_begins_;$/;"	m	class:pdlfs::plfsio::CompactorLogger
+epoch_ends_	reader/compactor.h	/^  std::vector<uint64_t> epoch_ends_;$/;"	m	class:pdlfs::plfsio::CompactorLogger
+fdcache	reader/range_reader.h	/^  CachingDirReader<T>* fdcache;$/;"	m	struct:pdlfs::plfsio::ManifestReadWorkItem
+fdcache	reader/range_reader.h	/^  CachingDirReader<T>* fdcache;$/;"	m	struct:pdlfs::plfsio::RankwiseSSTReadWorkItem
+fdcache	reader/range_reader.h	/^  CachingDirReader<T>* fdcache;$/;"	m	struct:pdlfs::plfsio::SSTReadWorkItem
+fdcache_	reader/range_reader.h	/^  CachingDirReader<T> fdcache_;$/;"	m	class:pdlfs::plfsio::RangeReader
+fdcache_	reader/reader_base.h	/^  CachingDirReader<SequentialFile> fdcache_;$/;"	m	class:pdlfs::plfsio::ReaderBase
+fdcache_	reader/sliding_sorter.h	/^  CachingDirReader<SequentialFile>& fdcache_;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+fh	reader/file_cache.h	/^  T* fh;$/;"	m	struct:pdlfs::plfsio::FileCacheEntry
+float_eq	common.h	/^  static bool float_eq(float a, float b) {$/;"	f	class:pdlfs::carp::FloatUtils
+float_gt	common.h	/^  static bool float_gt(float a, float b) {$/;"	f	class:pdlfs::carp::FloatUtils
+float_gte	common.h	/^  static bool float_gte(float a, float b) {$/;"	f	class:pdlfs::carp::FloatUtils
+float_lt	common.h	/^  static bool float_lt(float a, float b) {$/;"	f	class:pdlfs::carp::FloatUtils
+float_lte	common.h	/^  static bool float_lte(float a, float b) {$/;"	f	class:pdlfs::carp::FloatUtils
+force_leveldb_format	reader/plfs_wrapper.h	/^  int force_leveldb_format;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+fsz	reader/file_cache.h	/^  uint64_t fsz;$/;"	m	struct:pdlfs::plfsio::FileCacheEntry
+gen_plfsdir_conf	reader/plfs_wrapper.cc	/^static std::string gen_plfsdir_conf(pdlfs::plfsio::PlfsOpts& dirc, int rank) {$/;"	f	file:
+io_engine	reader/plfs_wrapper.h	/^  int io_engine;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+is_open	reader/file_cache.h	/^  bool is_open;$/;"	m	struct:pdlfs::plfsio::FileCacheEntry
+item	reader/range_reader.h	/^  PartitionManifestItem* item;$/;"	m	struct:pdlfs::plfsio::SSTReadWorkItem
+item_count	reader/file_cache.h	/^  uint64_t item_count;$/;"	m	struct:pdlfs::plfsio::ReadRequest
+item_sz_	reader/manifest_reader.h	/^  size_t item_sz_;$/;"	m	class:pdlfs::plfsio::PartitionManifestReader
+items	reader/compactor.h	/^    std::vector<PartitionManifestItem> items;$/;"	m	struct:pdlfs::plfsio::Compactor::PartitionedRun
+kFloatCompThreshold	common.h	/^  static constexpr float kFloatCompThreshold = 1e-3;$/;"	m	class:pdlfs::carp::FloatUtils
+kMaxCacheSz	reader/file_cache.h	/^  const int kMaxCacheSz;$/;"	m	class:pdlfs::plfsio::CachingDirReader
+kMaxPivots	carp/carp_base.h	/^  static constexpr uint32_t kMaxPivots = 256;$/;"	m	class:pdlfs::carp::CarpBase
+kMaxRankWrcnt	reader/plfs_writer.h	/^  static const uint64_t kMaxRankWrcnt = MILLION(200);$/;"	m	class:pdlfs::plfsio::PlfsWriter
+kMaxValSz	reader/sliding_sorter.h	/^  static const size_t kMaxValSz = 60;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+kMemMax	reader/compactor.h	/^  static const size_t kMemMax = MB(500);$/;"	m	class:pdlfs::plfsio::Compactor
+key	reader/range_reader.h	/^  float key;$/;"	m	struct:pdlfs::plfsio::KeyPair
+key	reader/sliding_sorter.h	/^    float key;$/;"	m	struct:pdlfs::plfsio::SlidingSorter::KVItem
+key_size	reader/plfs_wrapper.h	/^  int key_size;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+key_sz	reader/range_reader.h	/^  size_t key_sz;$/;"	m	struct:pdlfs::plfsio::RankwiseSSTReadWorkItem
+key_sz	reader/range_reader.h	/^  size_t key_sz;$/;"	m	struct:pdlfs::plfsio::SSTReadWorkItem
+key_sz	reader/reader_base.h	/^  uint64_t key_sz;$/;"	m	struct:pdlfs::plfsio::ParsedFooter
+key_sz_	reader/reader_base.h	/^  size_t key_sz_;$/;"	m	class:pdlfs::plfsio::ReaderBase
+last_cutoff_	reader/sliding_sorter.h	/^  float last_cutoff_;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+logf	common.cc	/^int logf(int lvl, const char* fmt, ...) {$/;"	f
+logger_	reader/compactor.h	/^  CompactorLogger logger_;$/;"	m	class:pdlfs::plfsio::Compactor
+logger_	reader/range_reader.h	/^  RangeReaderPerfLogger logger_;$/;"	m	class:pdlfs::plfsio::RangeReader
+main	reader/reader-test.cc	/^int main(int argc, char* argv[]) {$/;"	f
+manifest_	reader/manifest_reader.h	/^  PartitionManifest& manifest_;$/;"	m	class:pdlfs::plfsio::PartitionManifestReader
+manifest_	reader/range_reader.h	/^  PartitionManifest manifest_;$/;"	m	class:pdlfs::plfsio::RangeReader
+manifest_	reader/reader_base.h	/^  PartitionManifest manifest_;$/;"	m	class:pdlfs::plfsio::ReaderBase
+manifest_data	reader/reader_base.h	/^  Slice manifest_data;$/;"	m	struct:pdlfs::plfsio::ParsedFooter
+manifest_mutex_	reader/manifest_reader.h	/^  port::Mutex manifest_mutex_;$/;"	m	class:pdlfs::plfsio::PartitionManifestReader
+manifest_reader	reader/range_reader.h	/^  PartitionManifestReader* manifest_reader;$/;"	m	struct:pdlfs::plfsio::ManifestReadWorkItem
+manifest_reader_	reader/range_reader.h	/^  PartitionManifestReader manifest_reader_;$/;"	m	class:pdlfs::plfsio::RangeReader
+manifest_reader_	reader/reader_base.h	/^  PartitionManifestReader manifest_reader_;$/;"	m	class:pdlfs::plfsio::ReaderBase
+manifest_sz	reader/reader_base.h	/^  uint64_t manifest_sz;$/;"	m	struct:pdlfs::plfsio::ParsedFooter
+memtable_size	reader/plfs_wrapper.h	/^  const char* memtable_size;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+merge_pool_	reader/sliding_sorter.h	/^      merge_pool_;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+mutex_	carp/carp_base.h	/^  port::Mutex mutex_;$/;"	m	class:pdlfs::carp::CarpBase
+mutex_	reader/file_cache.h	/^  port::Mutex mutex_;$/;"	m	class:pdlfs::plfsio::CachingDirReader
+mutex_	reader/task_completion_tracker.h	/^  port::Mutex mutex_;$/;"	m	class:pdlfs::plfsio::TaskCompletionTracker
+my_pivot_count_	carp/carp_base.h	/^  size_t my_pivot_count_;$/;"	m	class:pdlfs::carp::CarpBase
+my_pivot_width_	carp/carp_base.h	/^  double my_pivot_width_;$/;"	m	class:pdlfs::carp::CarpBase
+my_pivots_	carp/carp_base.h	/^  double my_pivots_[kMaxPivots];$/;"	m	class:pdlfs::carp::CarpBase
+my_rank_	carp/carp_base.h	/^  int my_rank_;$/;"	m	class:pdlfs::carp::CarpBase
+num_entries_	reader/manifest_reader.h	/^  static const size_t num_entries_ = 9;$/;"	m	class:pdlfs::plfsio::PartitionManifestReader
+num_epochs	reader/reader_base.h	/^  uint32_t num_epochs;$/;"	m	struct:pdlfs::plfsio::ParsedFooter
+num_ranks_	reader/file_cache.h	/^  int num_ranks_;$/;"	m	class:pdlfs::plfsio::CachingDirReader
+num_ranks_	reader/range_reader.h	/^  int num_ranks_;$/;"	m	class:pdlfs::plfsio::RangeReader
+num_ranks_	reader/reader_base.h	/^  int num_ranks_;$/;"	m	class:pdlfs::plfsio::ReaderBase
+num_ranks_	reader/sliding_sorter.h	/^  int num_ranks_;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+offset	reader/file_cache.h	/^  uint64_t offset;$/;"	m	struct:pdlfs::plfsio::ReadRequest
+offset	reader/range_reader.h	/^  size_t offset;$/;"	m	struct:pdlfs::plfsio::KeyPair
+offsets_	reader/manifest_reader.h	/^  size_t offsets_[num_entries_];$/;"	m	class:pdlfs::plfsio::PartitionManifestReader
+operator ()	reader/range_reader.h	/^  inline bool operator()(const KeyPair& lhs, const KeyPair& rhs) {$/;"	f	struct:pdlfs::plfsio::KeyPairComparator
+operator <	reader/file_cache.h	/^  bool operator<(const ReadRequest& rhs) const { return offset < rhs.offset; }$/;"	f	struct:pdlfs::plfsio::ReadRequest
+operator <	reader/sliding_sorter.h	/^    bool operator<(const KVItem& other) const { return key < other.key; }$/;"	f	struct:pdlfs::plfsio::SlidingSorter::KVItem
+operator >	reader/sliding_sorter.h	/^    bool operator>(const KVItem& other) const { return key > other.key; }$/;"	f	struct:pdlfs::plfsio::SlidingSorter::KVItem
+options_	reader/range_reader.h	/^  const RdbOptions& options_;$/;"	m	class:pdlfs::plfsio::RangeReader
+options_	reader/reader_base.h	/^  const RdbOptions options_;$/;"	m	class:pdlfs::plfsio::ReaderBase
+opts_	reader/plfs_wrapper.h	/^  PlfsOpts opts_;$/;"	m	class:pdlfs::plfsio::PlfsWrapper
+output_path_	reader/manifest_reader.h	/^  std::string output_path_;$/;"	m	class:pdlfs::plfsio::PartitionManifestReader
+parallelism	common.h	/^  uint32_t parallelism;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+particle_buf_size	reader/plfs_wrapper.h	/^  int particle_buf_size;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+particle_count	reader/plfs_wrapper.h	/^  int particle_count;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+particle_size	reader/plfs_wrapper.h	/^  int particle_size;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+partition_point	reader/compactor.h	/^    float partition_point;$/;"	m	struct:pdlfs::plfsio::Compactor::PartitionedRun
+path_	reader/plfs_writer.h	/^  const char* path_;$/;"	m	class:pdlfs::plfsio::PlfsWriter
+pdlfs	carp/carp_base.h	/^namespace pdlfs {$/;"	n
+pdlfs	carp/carp_utils.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	carp/carp_utils.h	/^namespace pdlfs {$/;"	n
+pdlfs	common.h	/^namespace pdlfs {$/;"	n
+pdlfs	perf.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/compactor.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/compactor.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/file_cache.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/file_cache.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/fmt_checker.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/manifest.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/manifest_reader.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/manifest_reader.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/plfs_wrapper.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/plfs_wrapper.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/plfs_writer.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/query_utils.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/query_utils.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/range_reader.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/range_reader.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/reader-test.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/reader_base.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/reader_base.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/sliding_sorter.cc	/^namespace pdlfs {$/;"	n	file:
+pdlfs	reader/sliding_sorter.h	/^namespace pdlfs {$/;"	n
+pdlfs	reader/task_completion_tracker.h	/^namespace pdlfs {$/;"	n
+plfs_	reader/plfs_writer.h	/^  PlfsWrapper* plfs_;$/;"	m	class:pdlfs::plfsio::PlfsWriter
+plfs_	reader/sliding_sorter.h	/^  PlfsWriter plfs_;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+plfsdir_error_printer	reader/plfs_wrapper.cc	/^static void plfsdir_error_printer(const char* msg, void*) {$/;"	f	file:
+plfsenv_	reader/plfs_wrapper.h	/^  deltafs_env* plfsenv_;$/;"	m	class:pdlfs::plfsio::PlfsWrapper
+plfshdl_	reader/plfs_wrapper.h	/^  deltafs_plfsdir* plfshdl_;$/;"	m	class:pdlfs::plfsio::PlfsWrapper
+plfsio	common.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	perf.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/compactor.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/compactor.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/file_cache.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/file_cache.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/fmt_checker.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/manifest.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/manifest_reader.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/manifest_reader.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/plfs_wrapper.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/plfs_wrapper.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/plfs_writer.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/query_utils.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/query_utils.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/range_reader.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/range_reader.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/reader-test.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/reader_base.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/reader_base.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/sliding_sorter.cc	/^namespace plfsio {$/;"	n	namespace:pdlfs	file:
+plfsio	reader/sliding_sorter.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsio	reader/task_completion_tracker.h	/^namespace plfsio {$/;"	n	namespace:pdlfs
+plfsparts_	reader/plfs_wrapper.h	/^  int plfsparts_;$/;"	m	class:pdlfs::plfsio::PlfsWrapper
+plfstp_	reader/plfs_wrapper.h	/^  deltafs_tp* plfstp_;$/;"	m	class:pdlfs::plfsio::PlfsWrapper
+pre_flushing_sync	reader/plfs_wrapper.h	/^  int pre_flushing_sync;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+pre_flushing_wait	reader/plfs_wrapper.h	/^  int pre_flushing_wait;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+qrvec_offset	reader/range_reader.h	/^  uint64_t qrvec_offset;$/;"	m	struct:pdlfs::plfsio::RankwiseSSTReadWorkItem
+qrvec_offset	reader/range_reader.h	/^  uint64_t qrvec_offset;$/;"	m	struct:pdlfs::plfsio::SSTReadWorkItem
+query_batch	common.h	/^  bool query_batch;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+query_batch_in	common.h	/^  std::string query_batch_in;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+query_begin	common.h	/^  float query_begin;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+query_end	common.h	/^  float query_end;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+query_epoch	common.h	/^  int query_epoch;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+query_on	common.h	/^  bool query_on;$/;"	m	struct:pdlfs::plfsio::RdbOptions
+query_results	reader/range_reader.h	/^  std::vector<KeyPair>* query_results;$/;"	m	struct:pdlfs::plfsio::RankwiseSSTReadWorkItem
+query_results	reader/range_reader.h	/^  std::vector<KeyPair>* query_results;$/;"	m	struct:pdlfs::plfsio::SSTReadWorkItem
+query_results_	reader/range_reader.h	/^  std::vector<KeyPair> query_results_;$/;"	m	class:pdlfs::plfsio::RangeReader
+range_max_	carp/carp_base.h	/^  double range_max_;$/;"	m	class:pdlfs::carp::CarpBase
+range_min_	carp/carp_base.h	/^  double range_min_;$/;"	m	class:pdlfs::carp::CarpBase
+rank	reader/file_cache.h	/^  int rank;$/;"	m	struct:pdlfs::plfsio::FileCacheEntry
+rank	reader/range_reader.h	/^  int rank;$/;"	m	struct:pdlfs::plfsio::KeyPair
+rank	reader/range_reader.h	/^  int rank;$/;"	m	struct:pdlfs::plfsio::ManifestReadWorkItem
+rank	reader/range_reader.h	/^  int rank;$/;"	m	struct:pdlfs::plfsio::RankwiseSSTReadWorkItem
+rank_	reader/plfs_writer.h	/^  int rank_;$/;"	m	class:pdlfs::plfsio::PlfsWriter
+rank_bins_	carp/carp_base.h	/^  std::vector<float> rank_bins_;$/;"	m	class:pdlfs::carp::CarpBase
+rank_counts_	carp/carp_base.h	/^  std::vector<float> rank_counts_;$/;"	m	class:pdlfs::carp::CarpBase
+rank_counts_aggr_	carp/carp_base.h	/^  std::vector<uint64_t> rank_counts_aggr_;$/;"	m	class:pdlfs::carp::CarpBase
+rank_cursors_	reader/reader_base.h	/^  std::vector<size_t> rank_cursors_;$/;"	m	class:pdlfs::plfsio::ReaderBase
+rank_cursors_	reader/sliding_sorter.h	/^  std::vector<size_t> rank_cursors_;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+scratch	reader/file_cache.h	/^  char* scratch;$/;"	m	struct:pdlfs::plfsio::ReadRequest
+scratch	reader/reader_base.h	/^  std::string scratch;$/;"	m	struct:pdlfs::plfsio::ParsedFooter
+skip_checksums	reader/plfs_wrapper.h	/^  int skip_checksums;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+slice	reader/file_cache.h	/^  Slice slice;$/;"	m	struct:pdlfs::plfsio::ReadRequest
+task_tracker	reader/range_reader.h	/^  TaskCompletionTracker* task_tracker;$/;"	m	struct:pdlfs::plfsio::ManifestReadWorkItem
+task_tracker	reader/range_reader.h	/^  TaskCompletionTracker* task_tracker;$/;"	m	struct:pdlfs::plfsio::RankwiseSSTReadWorkItem
+task_tracker	reader/range_reader.h	/^  TaskCompletionTracker* task_tracker;$/;"	m	struct:pdlfs::plfsio::SSTReadWorkItem
+task_tracker_	reader/range_reader.h	/^  TaskCompletionTracker task_tracker_;$/;"	m	class:pdlfs::plfsio::RangeReader
+tasks_completed_	reader/task_completion_tracker.h	/^  uint32_t tasks_completed_;$/;"	m	class:pdlfs::plfsio::TaskCompletionTracker
+thpool_	reader/range_reader.h	/^  ThreadPool* thpool_;$/;"	m	class:pdlfs::plfsio::RangeReader
+ts_begin_	perf.h	/^  std::map<const char*, uint64_t> ts_begin_;$/;"	m	class:pdlfs::plfsio::RangeReaderPerfLogger
+ts_end_	perf.h	/^  std::map<const char*, uint64_t> ts_end_;$/;"	m	class:pdlfs::plfsio::RangeReaderPerfLogger
+unordered_storage	reader/plfs_wrapper.h	/^  int unordered_storage;$/;"	m	struct:pdlfs::plfsio::PlfsOpts
+val	reader/sliding_sorter.h	/^    char val[kMaxValSz];$/;"	m	struct:pdlfs::plfsio::SlidingSorter::KVItem
+val_sz	reader/range_reader.h	/^  size_t val_sz;$/;"	m	struct:pdlfs::plfsio::RankwiseSSTReadWorkItem
+val_sz	reader/range_reader.h	/^  size_t val_sz;$/;"	m	struct:pdlfs::plfsio::SSTReadWorkItem
+val_sz	reader/reader_base.h	/^  uint64_t val_sz;$/;"	m	struct:pdlfs::plfsio::ParsedFooter
+val_sz_	reader/reader_base.h	/^  size_t val_sz_;$/;"	m	class:pdlfs::plfsio::ReaderBase
+val_sz_	reader/sliding_sorter.cc	/^size_t SlidingSorter::val_sz_;$/;"	m	class:pdlfs::plfsio::SlidingSorter	file:
+val_sz_	reader/sliding_sorter.h	/^  static size_t val_sz_;$/;"	m	class:pdlfs::plfsio::SlidingSorter
+wi_vec	reader/range_reader.h	/^  std::vector<PartitionManifestItem> wi_vec;$/;"	m	struct:pdlfs::plfsio::RankwiseSSTReadWorkItem
+~RangeReader	reader/range_reader.h	/^  ~RangeReader() {$/;"	f	class:pdlfs::plfsio::RangeReader

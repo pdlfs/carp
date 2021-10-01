@@ -28,7 +28,7 @@ class TaskCompletionTracker {
       id = rand();
     } while (MAP_HAS(ts_beg_map_, id));
 
-    tid_rid_map_[tid] = id;
+    tid_rid_map_[id] = tid;
     ts_beg_map_[id] = env_->NowMicros();
 
     return id;
@@ -76,11 +76,12 @@ class TaskCompletionTracker {
     logf(LOG_INFO, "IO Sum: %.1fs, Total Sum: %.1fs", io_sum / 1e6,
          total_sum / 1e6);
 
-    std::vector<uint64_t> all_times;
-    uint64_t all_total = 0;
-    std::map<pid_t, uint64_t>::const_iterator it = tid_total_map_.cbegin();
-    for (; it != tid_total_map_.cend(); it++) {
-      uint64_t time_sec = it->second / 1e6;
+    std::vector<float> all_times;
+    float all_total = 0;
+    std::map<pid_t, uint64_t>::iterator it = tid_total_map_.begin();
+
+    for (; it != tid_total_map_.end(); it++) {
+      float time_sec = it->second / 1e6;
       all_times.push_back(time_sec);
       all_total += time_sec;
     }
@@ -123,7 +124,7 @@ class TaskCompletionTracker {
   uint32_t tasks_completed_;
   std::map<int, uint64_t> ts_beg_map_;
   std::map<int, uint64_t> ts_io_map_;
-  std::map<pid_t, int> tid_rid_map_;
+  std::map<int, pid_t> tid_rid_map_;
   std::map<pid_t, uint64_t> tid_total_map_;
   std::vector<uint64_t> time_io_;
   std::vector<uint64_t> time_total_;

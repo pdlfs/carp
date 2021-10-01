@@ -94,7 +94,7 @@ class Compactor : public ReaderBase {
   Status ComputeRunsForEpoch(std::vector< PartitionedRun >& runs, int epoch,
                              size_t& mf_idx);
   std::string CreateDestDir(int epoch = -1) {
-    std::string dest = options_.data_path;
+    std::string dest = options_.output_path;
     if (dest[dest.size() - 1] == '/') dest.resize(dest.size() - 1);
     dest += ".merged";
 
