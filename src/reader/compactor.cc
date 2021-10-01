@@ -94,7 +94,9 @@ Status Compactor::MergeEpoch(int epoch) {
 
   std::vector<PartitionedRun>& runs = run_map[epoch];
 
-  sorter.EpochBegin();
+  for (int e = 0; e <= epoch; e++) {
+    sorter.EpochBegin();
+  }
 
   for (size_t i = 0; i < runs.size(); i++) {
     PartitionedRun& run = runs[i];

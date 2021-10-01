@@ -50,7 +50,7 @@ class Compactor : public ReaderBase {
     s = ReadManifests();
     if (!s.ok()) return s;
 
-//    s = MergeAll();
+   // s = MergeAll();
     s = MergeEpoch(options_.query_epoch);
 
     return s;
@@ -95,8 +95,6 @@ class Compactor : public ReaderBase {
                              size_t& mf_idx);
   std::string CreateDestDir(int epoch = -1) {
     std::string dest = options_.output_path;
-    if (dest[dest.size() - 1] == '/') dest.resize(dest.size() - 1);
-    dest += ".merged";
 
     Status s = options_.env->CreateDir(dest.c_str());
     if (!s.ok()) {
@@ -106,6 +104,9 @@ class Compactor : public ReaderBase {
     if (epoch != -1) {
       dest = dest + "/" + std::to_string(epoch);
       s = options_.env->CreateDir(dest.c_str());
+      if (!s.ok()) {
+        printf("dir create error: %s\n", s.ToString().c_str());
+      }
     }
 
     return dest;

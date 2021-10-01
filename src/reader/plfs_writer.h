@@ -28,7 +28,7 @@ class PlfsWriter {
 
   Status EpochFlush() {
     Status s = Status::OK();
-    if (plfs_) s = plfs_->EpochFlush();
+    if (plfs_ and (epoch_ > 0)) s = plfs_->EpochFlush();
     epoch_++;
     return s;
   }
@@ -82,7 +82,7 @@ class PlfsWriter {
     cur_rank_wrcnt_ = 0;
     rank_++;
 
-    for (int advcnt = 0; advcnt < epoch_ + 1; advcnt++) {
+    for (int advcnt = 0; advcnt < epoch_ - 1; advcnt++) {
       plfs_->EpochFlush();
     }
 
@@ -94,7 +94,7 @@ class PlfsWriter {
   int epoch_;
   uint64_t cur_rank_wrcnt_;
 #define MILLION(n) (1000000 * (n))
-  static const uint64_t kMaxRankWrcnt = MILLION(200);
+  static const uint64_t kMaxRankWrcnt = MILLION(83);
 #undef MILLION
   PlfsWrapper* plfs_;
 };

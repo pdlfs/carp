@@ -25,6 +25,7 @@ void ParseOptions(int argc, char* argv[], RdbOptions& options) {
         break;
       case 'e':
         options.query_epoch = std::stoi(optarg);
+        break;
       case 'o':
         options.output_path = optarg;
         break;
