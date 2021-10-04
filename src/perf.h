@@ -19,7 +19,7 @@ class RangeReaderPerfLogger {
   void RegisterEnd(const char* key) { ts_end_[key] = env_->NowMicros(); }
 
   void PrintStats() {
-    std::map<const char*, uint64_t>::iterator it = ts_begin_.begin();
+    std::map< const char*, uint64_t >::iterator it = ts_begin_.begin();
 
     uint64_t intvl_total = 0;
 
@@ -37,7 +37,7 @@ class RangeReaderPerfLogger {
   }
 
   Status LogQuery(const char* dir_path, int epoch, float qbeg, float qend,
-                  float qsel) {
+                  float qsel_sst, float qsel_key) {
     Status s = Status::OK();
 
     const char* events[] = {"SSTREAD", "SORT"};
@@ -55,8 +55,9 @@ class RangeReaderPerfLogger {
     }
 
     char log_buf[1024];
-    size_t log_bufsz = snprintf(log_buf, 1024, "%s,%d,%f,%f,%f,%s\n", dir_path,
-                                epoch, qbeg, qend, qsel, ts_str.c_str());
+    size_t log_bufsz =
+        snprintf(log_buf, 1024, "%s,%d,%f,%f,%f,%f,%s\n", dir_path, epoch, qbeg,
+                 qend, qsel_sst, qsel_key, ts_str.c_str());
 
     /* ugly, but pdlfs::env doesn't support appendable files yet? */
     const char* const kQueryFname = "querylog.csv";
@@ -65,7 +66,9 @@ class RangeReaderPerfLogger {
       s = ReadFileToString(env_, kQueryFname, &data);
       if (!s.ok()) return s;
     } else {
-      data = "plfspath,epoch,qbegin,qend,qselectivity,qreadus,qsortus\n";
+      data =
+          "plfspath,epoch,qbegin,qend,qselectivity,qkeyselectivity,qreadus,"
+          "qsortus\n";
     }
 
     data += std::string(log_buf, log_bufsz);
@@ -86,8 +89,8 @@ class RangeReaderPerfLogger {
     return res;
   }
   Env* const env_;
-  std::map<const char*, uint64_t> ts_begin_;
-  std::map<const char*, uint64_t> ts_end_;
+  std::map< const char*, uint64_t > ts_begin_;
+  std::map< const char*, uint64_t > ts_end_;
 };
 }  // namespace plfsio
 }  // namespace pdlfs

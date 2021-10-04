@@ -80,19 +80,20 @@ Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
     }
   }
 
-
   logger_.RegisterEnd("SSTREAD");
   logger_.RegisterBegin("SORT");
 
 #if defined(PDLFS_TBB)
-  std::sort(std::execution::par, matching_results.begin(), matching_results.end(),
-            KeyPairComparator());
+  std::sort(std::execution::par, matching_results.begin(),
+            matching_results.end(), KeyPairComparator());
 #else
-  std::sort(matching_results.begin(), matching_results.end(), KeyPairComparator());
+  std::sort(matching_results.begin(), matching_results.end(),
+            KeyPairComparator());
 #endif
   logger_.RegisterEnd("SORT");
 
-  logf(LOG_INFO, "Query Results: %zu elements found\n", matching_results.size());
+  logf(LOG_INFO, "Query Results: %zu elements found\n",
+       matching_results.size());
 
 #define ITEM(ptile) \
   matching_results[((ptile) * (matching_results.size() - 1) / 100)].key
@@ -149,10 +150,22 @@ Status RangeReader< T >::QueryParallel(int epoch, float rbegin, float rend) {
          ITEM(10), ITEM(50), ITEM(100));
   }
 
-  double qsel = match_obj.GetSelectivity();
+  uint64_t match_cnt = 0;
+  for (size_t qidx = 0; qidx < query_results.size(); qidx++) {
+    float k = query_results[qidx].key;
+    if (k >= rbegin and k <= rend) {
+      match_cnt++;
+    }
+  }
+
+  double qsel_key = match_cnt * 1.0 / match_obj.DataSize();
+  double qsel_sst = match_obj.GetSelectivity();
+
+  logf(LOG_INFO, "Keys sel: %.4f%%, SST Sel: %.4f%%\n", qsel_key * 100,
+       qsel_sst * 100);
 
   logger_.PrintStats();
-  logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend, qsel);
+  logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend, qsel_sst, qsel_key);
   task_tracker_.AnalyzeTimes();
 
   return s;
