@@ -105,6 +105,7 @@ Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
   }
 
   logger_.PrintStats();
+  logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend, 1.0, 1.0);
   task_tracker_.AnalyzeTimes();
 
   return s;
