@@ -67,6 +67,7 @@ Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
   std::vector< KeyPair > matching_results;
 
   for (int rank = 0; rank < manifest_.NumRanks(); rank++) {
+    logf(LOG_INFO, "Reading Rank %d\n", rank);
     PartitionManifestMatch match_obj_in, match_obj;
     manifest_.GetAllEntries(epoch, rank, match_obj);
 

@@ -67,6 +67,8 @@ typedef struct RdbOptions {
   bool query_batch;
   std::string query_batch_in;
 
+  bool full_scan;
+
   RdbOptions()
       : env(NULL),
         parallelism(1),
@@ -75,7 +77,8 @@ typedef struct RdbOptions {
         query_epoch(-1),
         query_begin(0),
         query_end(0),
-        query_batch(false) {}
+        query_batch(false),
+        full_scan(false) {}
 } RdbOptions;
 }  // namespace plfsio
 }  // namespace pdlfs

@@ -32,7 +32,7 @@ namespace pdlfs {
 namespace plfsio {
 void feature_prompt() { logf(LOG_INFO, TBB_PROMPT); }
 
-void ReadCSV(Env* env, const char* csv_path, std::vector<Query>& qvec) {
+void ReadCSV(Env* env, const char* csv_path, std::vector< Query >& qvec) {
   std::string data;
 
   Status s = ReadFileToString(env, csv_path, &data);
@@ -97,7 +97,7 @@ void ParseOptions(int argc, char* argv[], pdlfs::plfsio::RdbOptions& options) {
   extern int optind;
   int c;
 
-  while ((c = getopt(argc, argv, "i:p:aqb:e:x:y:h")) != -1) {
+  while ((c = getopt(argc, argv, "i:p:aqb:e:x:y:sh")) != -1) {
     switch (c) {
       case 'i':
         options.data_path = optarg;
@@ -124,6 +124,9 @@ void ParseOptions(int argc, char* argv[], pdlfs::plfsio::RdbOptions& options) {
       case 'y':
         options.query_end = std::stof(optarg);
         break;
+      case 's':
+        options.full_scan = true;
+        break;
       case 'h':
         PrintHelp();
         exit(0);
@@ -135,11 +138,17 @@ void ParseOptions(int argc, char* argv[], pdlfs::plfsio::RdbOptions& options) {
 
   printf("[Threads] %d\n", options.parallelism);
   printf("[Analytics] %s\n", BOOLS(options.analytics_on));
+
+  std::string full_scan = "";
+  if (options.full_scan) {
+    full_scan = "\n!!! ALERT: FULL SCAN !!!";
+  }
+
   if (options.query_on) {
-    printf("[Query] Mode: Single\n");
+    printf("[Query] Mode: Single%s\n", full_scan.c_str());
     printf("[Query] %.3f to %.3f\n", options.query_begin, options.query_end);
   } else if (options.query_batch) {
-    printf("[Query] Mode: Batch\n");
+    printf("[Query] Mode: Batch%s\n", full_scan.c_str());
     printf("[Query] Batchfile: %s\n", options.query_batch_in.c_str());
   } else {
     printf("[Query] Mode: Off\n");
@@ -163,13 +172,22 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  pdlfs::plfsio::RangeReader<pdlfs::RandomAccessFile> reader(options);
+  pdlfs::plfsio::RangeReader< pdlfs::RandomAccessFile > reader(options);
   if (options.query_on and !options.analytics_on) {
     reader.ReadManifest(options.data_path);
-    reader.QueryParallel(options.query_epoch, options.query_begin,
-                         options.query_end);
+    if (options.full_scan) {
+      reader.QueryNaive(options.query_epoch, options.query_begin,
+                        options.query_end);
+    } else {
+      reader.QueryParallel(options.query_epoch, options.query_begin,
+                           options.query_end);
+    }
   } else if (options.query_batch) {
-    std::vector<pdlfs::plfsio::Query> qvec;
+    if (options.full_scan) {
+      logf(LOG_ERRO, "Full Scan not implemented on batch queries");
+      exit(-1);
+    }
+    std::vector< pdlfs::plfsio::Query > qvec;
     pdlfs::plfsio::ReadCSV(options.env, options.query_batch_in.c_str(), qvec);
     reader.ReadManifest(options.data_path);
     reader.QueryParallel(qvec);
