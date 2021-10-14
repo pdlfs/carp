@@ -48,8 +48,8 @@ class ReaderBase {
   PartitionManifestReader manifest_reader_;
 
   std::vector<size_t> rank_cursors_;
-  size_t key_sz_;
-  size_t val_sz_;
+  uint64_t key_sz_;
+  uint64_t val_sz_;
 };
 }  // namespace plfsio
 }  // namespace pdlfs

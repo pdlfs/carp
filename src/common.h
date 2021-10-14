@@ -23,7 +23,7 @@ namespace carp {
 // clang-format off
 class FloatUtils {
 public:
-  static constexpr float kFloatCompThreshold = 1e-3;
+  static const float kFloatCompThreshold = 1e-3;
 
   static bool float_eq(float a, float b) {
     return fabs(a - b) < kFloatCompThreshold;

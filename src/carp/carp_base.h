@@ -9,7 +9,7 @@ namespace carp {
 class PivotUtils;
 class CarpBase {
  public:
-  static constexpr uint32_t kMaxPivots = 256;
+  static const uint32_t kMaxPivots = 256;
 
  private:
   /* Return true if this is the first time you're blocking

@@ -22,15 +22,15 @@ class QueryMatchOptimizer {
   static Status OptimizeSchedule(PartitionManifestMatch& match) {
     Status s = Status::OK();
 
-    std::map<int, std::vector<PartitionManifestItem>> item_map;
-    std::vector<int> all_ranks;
+    std::map< int, std::vector< PartitionManifestItem > > item_map;
+    std::vector< int > all_ranks;
     match.GetUniqueRanks(all_ranks);
 
     const size_t match_origcnt = match.items_.size();
 
     for (size_t ri = 0; ri < all_ranks.size(); ri++) {
       int rank = all_ranks[ri];
-      std::vector<PartitionManifestItem>& vec = item_map[rank];
+      std::vector< PartitionManifestItem >& vec = item_map[rank];
       assert(vec.empty());
       match.GetMatchesByRank(rank, vec);
       std::sort(vec.begin(), vec.end(), PMISort());
@@ -40,13 +40,13 @@ class QueryMatchOptimizer {
 
     for (size_t ri = 0; ri < all_ranks.size(); ri++) {
       int rank = all_ranks[ri];
-      std::vector<PartitionManifestItem>& vec = item_map[rank];
+      std::vector< PartitionManifestItem >& vec = item_map[rank];
       if (!vec.empty()) match.items_.push_back(vec[0]);
     }
 
     for (size_t ri = 0; ri < all_ranks.size(); ri++) {
       int rank = all_ranks[ri];
-      std::vector<PartitionManifestItem>& vec = item_map[rank];
+      std::vector< PartitionManifestItem >& vec = item_map[rank];
       for (size_t vi = 1; vi < vec.size(); vi++) {
         match.items_.push_back(vec[vi]);
       }
@@ -61,7 +61,7 @@ class QueryMatchOptimizer {
                          PartitionManifestMatch& out) {
     Status s = Status::OK();
 
-    std::vector<int> match_ranks;
+    std::vector< int > match_ranks;
     in.GetUniqueRanks(match_ranks);
     std::sort(match_ranks.begin(), match_ranks.end());
 
@@ -79,7 +79,7 @@ class QueryMatchOptimizer {
 
     for (size_t i = 0; i < match_ranks.size(); i++) {
       int rank = match_ranks[i];
-      std::vector<PartitionManifestItem> items_orig, items_opt;
+      std::vector< PartitionManifestItem > items_orig, items_opt;
       in.GetMatchesByRank(rank, items_orig);
       OptimizeRank(items_orig, items_opt, key_sz + val_sz);
 
@@ -98,8 +98,8 @@ class QueryMatchOptimizer {
   }
 
  private:
-  static void OptimizeRank(std::vector<PartitionManifestItem>& items_in,
-                           std::vector<PartitionManifestItem>& items_out,
+  static void OptimizeRank(std::vector< PartitionManifestItem >& items_in,
+                           std::vector< PartitionManifestItem >& items_out,
                            uint64_t kvp_sz) {
     PartitionManifestItem cur;
     bool cur_set = false;

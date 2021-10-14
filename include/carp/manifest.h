@@ -11,6 +11,7 @@
 #include <float.h>
 #include <inttypes.h>
 #include <map>
+#include <math.h>
 #include <sstream>
 #include <stdint.h>
 #include <vector>

@@ -39,7 +39,7 @@ class QueryUtils {
     float dist_min = FLT_MAX;
 
     for (size_t i = 0; i < v.size(); i++) {
-      float dist_cur = std::fabs(v[i] - f);
+      float dist_cur = fabs(v[i] - f);
       dist_min = std::min(dist_min, dist_cur);
     }
 
@@ -50,7 +50,7 @@ class QueryUtils {
     int count = 0;
 
     for (size_t i = 0; i < v.size(); i++) {
-      if (std::fabs(v[i] - f) < rmax) {
+      if (fabs(v[i] - f) < rmax) {
         count++;
       }
     }
