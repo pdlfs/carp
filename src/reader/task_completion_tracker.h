@@ -128,6 +128,7 @@ class TaskCompletionTracker {
   std::map<pid_t, uint64_t> tid_total_map_;
   std::vector<uint64_t> time_io_;
   std::vector<uint64_t> time_total_;
+#undef MAP_HAS
 };
 }  // namespace plfsio
 }  // namespace pdlfs

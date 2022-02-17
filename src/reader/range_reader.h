@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <carp/carp_config.h>
+
 #include "carp/coding_float.h"
 #include "carp/manifest.h"
 #include "common.h"
@@ -11,13 +13,9 @@
 #include "manifest_reader.h"
 #include "perf.h"
 #include "task_completion_tracker.h"
-#include "tbb_check.h"
 
 #include "pdlfs-common/env.h"
 
-#if defined(PDLFS_TBB)
-#include <execution>
-#endif
 #include <map>
 
 namespace pdlfs {
@@ -64,7 +62,7 @@ struct RankwiseSSTReadWorkItem {
 };
 
 struct KeyPairComparator {
-  inline bool operator()(const KeyPair& lhs, const KeyPair& rhs) {
+  inline bool operator()(const KeyPair& lhs, const KeyPair& rhs) const {
     return lhs.key < rhs.key;
   }
 };

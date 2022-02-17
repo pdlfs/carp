@@ -50,9 +50,8 @@ class CachingDirReader {
 
   int NumRanks() const { return num_ranks_; }
 
-#define KB(n) (n##u) << 10
   Status ReadFooter(int rank, ParsedFooter& parsed_footer,
-                    uint64_t opt_rdsz = KB(4));
+                    uint64_t opt_rdsz = 4096);
 
   Status Read(int rank, ReadRequest& request, bool force_reopen = true);
 

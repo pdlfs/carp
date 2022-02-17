@@ -8,9 +8,6 @@
 #include <reader/query_utils.h>
 #include <reader/range_reader.h>
 
-#define KB(x) (1024ull * (x))
-#define MB(x) (1024ull * KB(x))
-
 namespace pdlfs {
 namespace plfsio {
 

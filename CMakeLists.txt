@@ -11,71 +11,70 @@
 
 #
 # CMakeLists.txt  top-level cmake file for CARP
-# 1-Feb-2021  ankushj@andrew.cmu.edu
+# 01-Feb-2021  ankushj@andrew.cmu.edu
 #
 
 #
 # CARP is ... XXX
 #
 
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.1)
+project (carp C CXX)
 
-project (CARP)
+# link shared lib with full rpath
+set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-# add pdlfs-common cmake module directory to the path
-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-        "${CMAKE_CURRENT_SOURCE_DIR}/external/pdlfs-common/cmake")
+# setup cache variables for ccmake users
+if (NOT CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE Release
+            CACHE STRING "Choose the type of build" FORCE)
+    set_property (CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+            "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
+endif ()
+set (DEBUG_SANITIZER Off CACHE STRING "Sanitizer for debug builds")
+set_property (CACHE DEBUG_SANITIZER PROPERTY STRINGS
+        "Off" "Address" "Thread")
+set (CMAKE_PREFIX_PATH "" CACHE STRING "External dependencies path")
+set (BUILD_SHARED_LIBS "OFF" CACHE BOOL "Build a shared library")
 
-set (PDLFS_COMMON_LIBNAME "pdlfs-common" CACHE
-        STRING "Custom name to install pdlfs-common with")
-#set (PDLFS_COMMON_DEFINES "DELTAFS" CACHE
-#        STRING "Additional defines for this version of pdlfs-common")
-#mark_as_advanced (PDLFS_COMMON_LIBNAME PDLFS_COMMON_DEFINES)
-set (CARP_CXX_STANDARD "11" CACHE STRING "C++ std to probe")
-set (CARP_CXX_STANDARD_REQUIRED "OFF" CACHE BOOL "C++ std must be met")
-mark_as_advanced (CARP_CXX_STANDARD CARP_CXX_STANDARD_REQUIRED)
-set_property (CACHE CARP_CXX_STANDARD PROPERTY STRINGS "98" "11" "17")
-
-# note: CMAKE_CXX_STANDARD is not defined until cmake 3.1, and will be
-# ignored by cmake 3.0 and before.
 #
-include (CheckCXXCompilerFlag)
-if (CMAKE_VERSION VERSION_LESS "3.1")
-    set (cxxstdflag "-std=c++${CARP_CXX_STANDARD}")
-    CHECK_CXX_COMPILER_FLAG (${cxxstdflag} flag${cxxstdflag})
-    if (${flag${cxxstdflag}})
-        add_compile_options (${cxxstdflag})
-    else ()
-        if (CARP_CXX_STANDARD_REQUIRED)
-            message (FATAL_ERROR "Fail to enable CXX ${CARP_CXX_STANDARD}")
-        endif ()
+# for best query performance, we want a parallel sort.  CARP
+# uses the parallel sort from thread building blocks (TBB).
+# This makes TBB a dependency.  If you switch this off, CARP
+# will use a slower serialized sort (and TBB is not required).
+#
+option(CARP_PARALLEL_SORT "Use thread building blocks parallel sort" ON)
+
+#
+# sanitizer config (XXX: does not probe compiler to see if sanitizer flags
+# are supported... )
+#
+set (as_flags "-fsanitize=address -O1 -fno-omit-frame-pointer")
+set (ts_flags "-fsanitize=thread  -O1 -fno-omit-frame-pointer")
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    if (${DEBUG_SANITIZER} STREQUAL "Address")
+        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${as_flags}")
+        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${as_flags}")
+    elseif (${DEBUG_SANITIZER} STREQUAL "Thread")
+        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ts_flags}")
+        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ts_flags}")
     endif ()
-else ()
-    set (CMAKE_CXX_STANDARD ${CARP_CXX_STANDARD})
-    set (CMAKE_CXX_STANDARD_REQUIRED ${CARP_CXX_STANDARD_REQUIRED})
 endif ()
 
-# pull in pdlfs handling of generic cmake config
-include (cmake-options)
-
-# handle all the common PDLFS options using cmake/pdlfs-options.cmake
-include (pdlfs-options)
-
-set (PDLFS_COMMON_INTREE "OFF" CACHE BOOL
-        "Build in-tree common lib (for devel)")
-
-# we build the in-tree pdlfs-common if DELTAFS_COMMON_INTREE is set,
-# otherwise we look for one already built in our install or prefix path.
 #
-if (PDLFS_COMMON_INTREE)
-    add_subdirectory (external/pdlfs-common/src)
-else ()
-    message ("OK ${PDLFS_COMPONENT_CFG}") # XXXCDC
-    find_package (pdlfs-common REQUIRED COMPONENTS ${PDLFS_COMPONENT_CFG})
-endif ()
+# Find requrired packages
+#
+find_package(Threads REQUIRED)
+find_package(deltafs CONFIG REQUIRED)
+if(CARP_PARALLEL_SORT)
+    find_package(TBB CONFIG REQUIRED)
+else()
+    message(WARNING "parallel sort disabled, expect performance impact")
+endif()
 
-
+#
+# now add all our subdirectories
+#
 add_subdirectory(src)
 add_subdirectory(tools)
 add_subdirectory(benchmarks)
-

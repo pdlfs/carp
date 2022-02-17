@@ -9,6 +9,7 @@
  * found in the LICENSE file. See the AUTHORS file for names of contributors.
  */
 
+#include <carp/carp_config.h>
 #include "reader/range_reader.h"
 
 #include "pdlfs-common/env.h"
@@ -22,7 +23,7 @@
 #define OVERRIDE
 #endif
 
-#ifdef PDLFS_TBB
+#ifdef CARP_PARALLEL_SORT
 #define TBB_PROMPT "TBB enabled. Additional optimizations may be used."
 #else
 #define TBB_PROMPT "TBB disabled. Additional optimizations unavailable."

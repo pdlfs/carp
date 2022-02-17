@@ -8,6 +8,13 @@
 #include "query_utils.h"
 #include "reader_base.h"
 
+#ifdef CARP_PARALLEL_SORT
+#include <oneapi/tbb/parallel_sort.h>
+#define CARP_SORT oneapi::tbb::parallel_sort
+#else
+#define CARP_SORT std::sort
+#endif
+
 namespace pdlfs {
 namespace plfsio {
 
@@ -84,13 +91,8 @@ Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
   logger_.RegisterEnd("SSTREAD");
   logger_.RegisterBegin("SORT");
 
-#if defined(PDLFS_TBB)
-  std::sort(std::execution::par, matching_results.begin(),
-            matching_results.end(), KeyPairComparator());
-#else
-  std::sort(matching_results.begin(), matching_results.end(),
+  CARP_SORT(matching_results.begin(), matching_results.end(),
             KeyPairComparator());
-#endif
   logger_.RegisterEnd("SORT");
 
   logf(LOG_INFO, "Query Results: %zu elements found\n",
@@ -103,6 +105,8 @@ Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
     logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0),
          ITEM(10), ITEM(50), ITEM(100));
   }
+
+#undef ITEM
 
   logger_.PrintStats();
   logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend, 1.0, 1.0);
@@ -134,12 +138,7 @@ Status RangeReader< T >::QueryParallel(int epoch, float rbegin, float rend) {
   logger_.RegisterEnd("SSTREAD");
   logger_.RegisterBegin("SORT");
 
-#if defined(PDLFS_TBB)
-  std::sort(std::execution::par, query_results.begin(), query_results.end(),
-            KeyPairComparator());
-#else
-  std::sort(query_results.begin(), query_results.end(), KeyPairComparator());
-#endif
+  CARP_SORT(query_results.begin(), query_results.end(), KeyPairComparator());
   logger_.RegisterEnd("SORT");
 
   logf(LOG_INFO, "Query Results: %zu elements found\n", query_results.size());
@@ -151,6 +150,8 @@ Status RangeReader< T >::QueryParallel(int epoch, float rbegin, float rend) {
     logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0),
          ITEM(10), ITEM(50), ITEM(100));
   }
+
+#undef ITEM
 
   uint64_t match_cnt = 0;
   for (size_t qidx = 0; qidx < query_results.size(); qidx++) {
@@ -195,12 +196,7 @@ Status RangeReader< T >::QuerySequential(int epoch, float rbegin, float rend) {
   logger_.RegisterEnd("SSTREAD");
 
   logger_.RegisterBegin("SORT");
-#if defined(PDLFS_TBB)
-  std::sort(std::execution::par, query_results_.begin(), query_results_.end(),
-            KeyPairComparator());
-#else
-  std::sort(query_results_.begin(), query_results_.end(), KeyPairComparator());
-#endif
+  CARP_SORT(query_results_.begin(), query_results_.end(), KeyPairComparator());
   logger_.RegisterEnd("SORT");
 
   logf(LOG_INFO, "Query Results: %zu elements found\n", query_results_.size());
