@@ -21,6 +21,9 @@
 cmake_minimum_required(VERSION 3.1)
 project (carp C CXX)
 
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake")
+
 # link shared lib with full rpath
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
