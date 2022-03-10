@@ -7,15 +7,16 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <vector>
 
 // Hack for zero-or-more variadic args
 #define VA_ARGS(...) , ##__VA_ARGS__
-#define LOG(lvl, fmt, ...)                  \
-  do {                                      \
-    if (rank_ == 0) {                       \
+#define LOG(lvl, fmt, ...)                 \
+  do {                                     \
+    if (rank_ == 0) {                      \
       logf(lvl, fmt VA_ARGS(__VA_ARGS__)); \
-    }                                       \
+    }                                      \
   } while (0)
 
 struct VPICWriterOpts {
@@ -23,7 +24,15 @@ struct VPICWriterOpts {
   int num_ranks;
   std::string dir_in;
   std::string file_out;
+  size_t ts_out;  // dump first `ts_out` timesteps
 };
+
+double NowMicros() {
+  timespec t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+  double tusec = t.tv_sec * 1e6 + t.tv_nsec * 1e-3;
+  return tusec;
+}
 
 class VPICWriter {
  public:
@@ -31,25 +40,71 @@ class VPICWriter {
       : rank_(opts.my_rank),
         num_ranks_(opts.num_ranks),
         dir_in_(opts.dir_in),
-        file_out_(opts.file_out) {}
+        file_out_(opts.file_out),
+        ts_out_(opts.ts_out) {}
 
   void Run() {
     std::vector< int > timesteps;
+    double total_time = 0;
+    int timesteps_processed = 0;
+
     timesteps = DiscoverTimesteps(dir_in_);
 
-    for (size_t tidx = 0; tidx < timesteps.size(); tidx++) {
+    size_t nts_out = std::min(ts_out_, timesteps.size());
+
+    for (size_t tidx = 0; tidx < nts_out; tidx++) {
+      double ts_start = NowMicros();
+
       int timestep = timesteps[tidx];
       LOG(LOG_INFO, "Currently reading: timestep %d\n", timestep);
 
       CopyTimestep(timestep);
-      break;
+
+      double ts_end = NowMicros();
+      total_time += (ts_end - ts_start);
+      timesteps_processed++;
+      // break;
     }
+
+    LOG(LOG_INFO, "Timesteps processed: %d, avg time/ts: %.2lfs",
+        timesteps_processed, total_time * 1e-6 / timesteps_processed);
+  }
+
+  void RunTemp() {
+    H5PartFile* h5pf;
+    h5part_int64_t ierr;
+    h5pf =
+        H5PartOpenFileParallel(file_out_.c_str(), H5PART_WRITE, MPI_COMM_WORLD);
+    if (h5pf == NULL) {
+      LOG(LOG_ERRO, "OpenFile failed!");
+      return;
+    }
+
+    h5part_int64_t step = 200;
+    ierr = H5PartSetStep(h5pf, step);
+    if (ierr != H5PART_SUCCESS)
+      LOG(LOG_ERRO, "Error occured in H5PartSetStep. Error code: %" PRIu64,
+          ierr);
+
+    h5part_int64_t np_local = 6400000;
+    ierr = H5PartSetNumParticles(h5pf, np_local);
+    if (ierr != H5PART_SUCCESS)
+      LOG(LOG_INFO,
+          "Error occured in setting the # of tracers; Error code: %" PRIu64,
+          ierr);
+
+    ierr = H5PartCloseFile(h5pf);
+    if (ierr != H5PART_SUCCESS)
+      LOG(LOG_ERRO, "Error occured in closing %s. Error code: %" PRIu64,
+          file_out_.c_str(), ierr);
   }
 
  private:
   void CopyTimestep(int timestep) {
     std::string local_file = RankToFile(timestep);
     uint64_t num_particles = NumParticles(local_file);
+    // // std::string local_file = "Abc";
+    // num_particles = 6000000 + rand() % 100000;
 
     logf(LOG_DBUG, "Rank %d: %" PRIu64 " particles, %s\n", rank_, num_particles,
          local_file.c_str());
@@ -64,12 +119,13 @@ class VPICWriter {
     GenerateRandomInts(rand_vali, num_particles);
 
     WriteH5Part(timestep, num_particles, real_valf, rand_valf, rand_vali);
+    // WriteH5Part(timestep, num_particles, rand_valf, rand_valf, rand_vali);
 
-    delete rand_vali;
+    delete[] rand_vali;
     rand_vali = nullptr;
-    delete rand_valf;
+    delete[] rand_valf;
     rand_valf = nullptr;
-    delete real_valf;
+    delete[] real_valf;
     real_valf = nullptr;
   }
 
@@ -108,15 +164,18 @@ class VPICWriter {
     }
   }
 
-  static uint64_t NumParticles(const std::string& fpath) {
+  uint64_t NumParticles(const std::string& fpath) {
     return FileSize(fpath) / sizeof(float);
   }
 
-  static uint64_t FileSize(const std::string& fpath) {
+  uint64_t FileSize(const std::string& fpath) {
     struct stat st;
+    logf(LOG_INFO, "file size: %s\n", fpath.c_str());
     if (stat(fpath.c_str(), &st) != 0) {
       logf(LOG_ERRO, "Stat Error: %s\n", strerror(errno));
     }
+
+    fprintf(stderr, "rank %d size: %lld\n", rank_, (long long)st.st_size);
 
     return st.st_size;
   }
@@ -169,6 +228,7 @@ class VPICWriter {
   uint64_t np_local_;
   const std::string dir_in_;
   const std::string file_out_;
+  size_t ts_out_;
 };
 
 void VPICWriter::WriteH5Part(const int ts, const int num_particles,
@@ -183,7 +243,12 @@ void VPICWriter::WriteH5Part(const int ts, const int num_particles,
   h5part_int64_t np_local = num_particles;
   const char* fname = file_out_.c_str();
 
-  h5pf = H5PartOpenFileParallel(fname, H5PART_WRITE, MPI_COMM_WORLD);
+  // h5pf = H5PartOpenFileParallel(fname, H5PART_WRITE, MPI_COMM_WORLD);
+  h5pf = H5PartOpenFileParallel(fname, H5PART_APPEND, MPI_COMM_WORLD);
+  if (h5pf == nullptr) {
+    LOG(LOG_ERRO, "Failed to open H5Part file");
+    return;
+  }
 
   ierr = H5PartSetStep(h5pf, step);
   // ierr = H5PartSetNumParticlesStrided(h5pf, np_local, 8);
