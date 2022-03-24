@@ -24,7 +24,8 @@ struct VPICWriterOpts {
   int num_ranks;
   std::string dir_in;
   std::string file_out;
-  size_t ts_out;  // dump first `ts_out` timesteps
+  int ts_beg;  // first timestep to dump
+  int ts_end;  // last timestep to dump
 };
 
 double NowMicros() {
@@ -41,7 +42,8 @@ class VPICWriter {
         num_ranks_(opts.num_ranks),
         dir_in_(opts.dir_in),
         file_out_(opts.file_out),
-        ts_out_(opts.ts_out) {}
+        ts_beg_(opts.ts_beg),
+        ts_end_(opts.ts_end) {}
 
   void Run() {
     std::vector< int > timesteps;
@@ -50,18 +52,19 @@ class VPICWriter {
 
     timesteps = DiscoverTimesteps(dir_in_);
 
-    size_t nts_out = std::min(ts_out_, timesteps.size());
+    assert(ts_end_ < timesteps.size());
+    assert(ts_beg_ <= ts_end_);
 
-    for (size_t tidx = 0; tidx < nts_out; tidx++) {
-      double ts_start = NowMicros();
+    for (size_t tidx = ts_beg_; tidx <= ts_end_; tidx++) {
+      double time_start = NowMicros();
 
       int timestep = timesteps[tidx];
       LOG(LOG_INFO, "Currently reading: timestep %d\n", timestep);
 
       CopyTimestep(timestep);
 
-      double ts_end = NowMicros();
-      total_time += (ts_end - ts_start);
+      double time_end = NowMicros();
+      total_time += (time_end - time_start);
       timesteps_processed++;
       // break;
     }
@@ -228,7 +231,8 @@ class VPICWriter {
   uint64_t np_local_;
   const std::string dir_in_;
   const std::string file_out_;
-  size_t ts_out_;
+  int ts_beg_;
+  int ts_end_;
 };
 
 void VPICWriter::WriteH5Part(const int ts, const int num_particles,
