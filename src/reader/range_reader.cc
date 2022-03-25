@@ -164,6 +164,7 @@ Status RangeReader< T >::QueryParallel(int epoch, float rbegin, float rend) {
   double qsel_key = match_cnt * 1.0 / match_obj.DataSize();
   double qsel_sst = match_obj.GetSelectivity();
 
+  logf(LOG_INFO, "Num hits: %" PRIu64 "\n", match_cnt);
   logf(LOG_INFO, "Keys sel: %.4f%%, SST Sel: %.4f%%\n", qsel_key * 100,
        qsel_sst * 100);
 
