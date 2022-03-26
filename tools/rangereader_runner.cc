@@ -9,11 +9,11 @@
  * found in the LICENSE file. See the AUTHORS file for names of contributors.
  */
 
-#include <carp/carp_config.h>
 #include "reader/range_reader.h"
 
 #include "pdlfs-common/env.h"
 
+#include <carp/carp_config.h>
 #include <getopt.h>
 #include <sys/stat.h>
 
@@ -73,7 +73,7 @@ void ReadCSV(Env* env, const char* csv_path, std::vector< Query >& qvec) {
 void PrintHelp() {
   printf(
       "./prog [-p parallelism] [-a analytics] [-q query -s query_start -e "
-      "query_end] [-b batch_query_path ]\n");
+      "query_end -r rank] [-b batch_query_path ]\n");
 }
 
 void ParseOptionsLong(int argc, char* argv[],
@@ -98,7 +98,7 @@ void ParseOptions(int argc, char* argv[], pdlfs::plfsio::RdbOptions& options) {
   extern int optind;
   int c;
 
-  while ((c = getopt(argc, argv, "i:p:aqb:e:x:y:sh")) != -1) {
+  while ((c = getopt(argc, argv, "i:p:aqr:b:e:x:y:sh")) != -1) {
     switch (c) {
       case 'i':
         options.data_path = optarg;
@@ -111,6 +111,9 @@ void ParseOptions(int argc, char* argv[], pdlfs::plfsio::RdbOptions& options) {
         break;
       case 'q':
         options.query_on = true;
+        break;
+      case 'r':
+        options.query_rank = std::stoi(optarg);
         break;
       case 'b':
         options.query_batch = true;
@@ -180,8 +183,8 @@ int main(int argc, char* argv[]) {
       reader.QueryNaive(options.query_epoch, options.query_begin,
                         options.query_end);
     } else {
-      reader.QueryParallel(options.query_epoch, options.query_begin,
-                           options.query_end);
+      reader.QueryParallel(options.query_rank, options.query_epoch,
+                           options.query_begin, options.query_end);
     }
   } else if (options.query_batch) {
     if (options.full_scan) {

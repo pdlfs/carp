@@ -60,10 +60,12 @@ typedef struct RdbOptions {
   bool analytics_on;
 
   bool query_on;
+  int query_rank;
   int query_epoch;
 
   float query_begin;
   float query_end;
+
   bool query_batch;
   std::string query_batch_in;
 
@@ -74,6 +76,7 @@ typedef struct RdbOptions {
         parallelism(1),
         analytics_on(false),
         query_on(false),
+        query_rank(-1),
         query_epoch(-1),
         query_begin(0),
         query_end(0),

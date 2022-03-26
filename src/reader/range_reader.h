@@ -102,10 +102,10 @@ class RangeReader {
   }
 
   Status QueryParallel(Query q) {
-    return QueryParallel(q.epoch, q.range.range_min, q.range.range_max);
+    return QueryParallel(q.rank, q.epoch, q.range.range_min, q.range.range_max);
   }
 
-  Status QueryParallel(int epoch, float rbegin, float rend);
+  Status QueryParallel(int rank, int epoch, float rbegin, float rend);
 
   Status QuerySequential(int epoch, float rbegin, float rend);
 

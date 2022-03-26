@@ -116,12 +116,16 @@ Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
 }
 
 template < typename T >
-Status RangeReader< T >::QueryParallel(int epoch, float rbegin, float rend) {
+Status RangeReader< T >::QueryParallel(int rank, int epoch, float rbegin,
+                                       float rend) {
   logger_.RegisterBegin("SSTREAD");
   Status s = Status::OK();
 
   PartitionManifestMatch match_obj_in, match_obj;
-  manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj);
+
+  Query q(epoch, rbegin, rend);
+  if (rank >= 0) q.rank = rank;
+  manifest_.GetOverlappingEntries(q, match_obj);
 
   //  s = QueryMatchOptimizer::Optimize(match_obj_in, match_obj);
   // s = QueryMatchOptimizer::OptimizeSchedule(match_obj);

@@ -35,7 +35,7 @@ struct Range {
   }
 
   bool Overlaps(const Range& r) const {
-    return Overlaps(r.range_max) or Overlaps(r.range_max) or
+    return Overlaps(r.range_min) or Overlaps(r.range_max) or
            ((r.range_min < range_min) and (r.range_max > range_max));
   }
 
@@ -69,8 +69,10 @@ struct Query {
  public:
   int epoch;
   Range range;
+  int rank;
 
-  Query(int epoch, float rmin, float rmax) : epoch(epoch), range(rmin, rmax) {}
+  Query(int epoch, float rmin, float rmax)
+      : epoch(epoch), range(rmin, rmax), rank(-1) {}
 
   bool Overlaps(const Query& rhs) const {
     return (epoch == rhs.epoch) and range.Overlaps(rhs.range);

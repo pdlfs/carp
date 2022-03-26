@@ -87,12 +87,16 @@ int PartitionManifest::GetOverlappingEntries(Query& q,
                                              PartitionManifestMatch& match) {
   for (size_t i = 0; i < items_.size(); i++) {
     if (items_[i].epoch == q.epoch && items_[i].Overlaps(q.range)) {
+      if (q.rank != -1 and items_[i].rank != q.rank) continue;
       match.AddItem(items_[i]);
     }
   }
 
   uint64_t mass_epoch = mass_epoch_[q.epoch];
   uint64_t mass_match = match.TotalMass();
+
+  logf(LOG_INFO, "Query Selectivity: %.4f %% (%lu items, %lu total)\n",
+       mass_match * 100.0 / mass_epoch, mass_match, mass_epoch);
 
   assert(sizes_set_);
   match.SetKVSizes(key_sz_, val_sz_);
