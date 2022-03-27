@@ -3,7 +3,7 @@
 #include <getopt.h>
 
 void PrintHelp() {
-  printf("./prog -i vpic_dir -o h5partfile.hdf5 -n ntimesteps\n");
+  printf("./prog -i vpic_dir -o h5partfile.hdf5 -s ts_begin -e ts_end\n");
 }
 
 void ParseOptions(int argc, char* argv[], VPICWriterOpts& opts) {
@@ -20,10 +20,17 @@ void ParseOptions(int argc, char* argv[], VPICWriterOpts& opts) {
         opts.file_out = optarg;
         break;
       case 's':
+<<<<<<< HEAD
         opts.ts_beg = std::stoi(optarg);
         break;
       case 'e':
         opts.ts_end = std::stoi(optarg);
+=======
+        opts.ts_first = std::stoi(optarg);
+        break;
+      case 'e':
+        opts.ts_last = std::stoi(optarg);
+>>>>>>> vpicwriter: add params to output only a slice of the timesteps
         break;
       case 'h':
       default:
@@ -37,6 +44,7 @@ int main(int argc, char* argv[]) {
   VPICWriterOpts opts;
   opts.dir_in = "";
   opts.file_out = "";
+<<<<<<< HEAD
   opts.ts_beg = -1;
   opts.ts_end = -1;
 
@@ -44,6 +52,14 @@ int main(int argc, char* argv[]) {
 
   if ((opts.dir_in == "") or (opts.file_out == "") or
       (opts.ts_beg == -1) or (opts.ts_end == -1)) {
+=======
+  opts.ts_first = 0;
+  opts.ts_last = 0;
+
+  ParseOptions(argc, argv, opts);
+
+  if ((opts.dir_in == "") or (opts.file_out == "") or (opts.ts_last < opts.ts_first)) {
+>>>>>>> vpicwriter: add params to output only a slice of the timesteps
     PrintHelp();
     return 0;
   }
@@ -59,7 +75,7 @@ int main(int argc, char* argv[]) {
   if (my_rank == 0) {
     logf(LOG_INFO, "[DIR_IN] %s", opts.dir_in.c_str());
     logf(LOG_INFO, "[FILE_OUT] %s", opts.file_out.c_str());
-    logf(LOG_INFO, "[TS_RANGE] %d to %d", opts.ts_beg, opts.ts_end);
+    logf(LOG_INFO, "[NUM_TS] %d", opts.ts_last - opts.ts_first + 1);
   }
 
   opts.my_rank = my_rank;

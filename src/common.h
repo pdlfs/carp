@@ -14,7 +14,7 @@
 #define LOG_DBUG 2
 #define LOG_DBG2 1
 
-#define LOG_LVL 3
+#define LOG_LVL 2
 
 int logf(int lvl, const char* fmt, ...);
 
