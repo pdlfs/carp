@@ -1,0 +1,279 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) C++ Intel(R) 64 Compiler for applications running on Intel(R) 64, Version 18.0.5.274 Build 20180823
+
+Compiler options: -I. -I/usr/projects/vpic/guofan/vpic/src -I/usr/projects/hpcsoft/toss3/grizzly/openmpi/2.1.2-intel-18.0.5/include -g -O3 -inline-forceinline -qoverride-limits -no-ansi-alias -Winline -qopt-report=5 -qopt-report-phase=all -diag-disable 10397 -Wl,--export-dynamic -std=c++11 -DVPIC_USE_LEGACY_SORT -DVPIC_USE_PTHREADS -DUSE_V4_AVX2 -DUSE_V8_AVX2 -DINPUT_DECK=reconnection.cc -o reconnection.Linux -Wl,-rpath,/usr/projects/vpic/guofan/vpic/build -L/usr/projects/vpic/guofan/vpic/build -lvpic -lpthread -ldl -pthread -Wl,-rpath -Wl,/usr/projects/hpcsoft/toss3/grizzly/openmpi/2.1.2-intel-18.0.5/lib -L/usr/projects/hpcsoft/toss3/grizzly/openmpi/2.1.2-intel-18.0.5/lib -lmpi
+
+    Report from: Interprocedural optimizations [ipo]
+
+  WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+  WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+  WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: 10000
+  -inline-max-per-compile: 500000
+
+In the inlining report below:
+   "sz" refers to the "size" of the routine. The smaller a routine's size,
+      the more likely it is to be inlined.
+   "isz" refers to the "inlined size" of the routine. This is the amount
+      the calling routine will grow if the called routine is inlined into it.
+      The compiler generally limits the amount a routine can grow by having
+      routines inlined into it.
+
+Begin optimization report for: main(int, char **)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (main(int, char **)) [1/13=7.7%] /usr/projects/vpic/guofan/vpic/deck/main.cc(65,1)
+  -> EXTERN: (68,5) boot_services(int *, char ***)
+  -> EXTERN: (71,26) strip_cmdline_string(int *, char ***, const char *, const char *)
+  -> EXTERN: (83,29) log_printf(const char *, ...)
+  -> EXTERN: (85,9) sprintf(char *, const char *, ...)
+  -> EXTERN: (86,9) restore_objects(const char *)
+  -> EXTERN: (87,9) mp_barrier()
+  -> EXTERN: (88,9) reanimate_objects()
+  -> EXTERN: (89,9) mp_barrier()
+  -> EXTERN: (97,13) log_printf(const char *, ...)
+  -> EXTERN: (99,9) operator delete(void *)
+  -> EXTERN: (99,9) vpic_simulation::vpic_simulation(vpic_simulation *)
+  -> EXTERN: (99,9) operator new(std::size_t)
+  -> EXTERN: (100,21) vpic_simulation::initialize(vpic_simulation *, int, char **)
+  -> EXTERN: (101,9) register_object(void *, checkpt_func_t, restore_func_t, reanimate_func_t)
+  -> EXTERN: (108,13) strip_cmdline_string(int *, char ***, const char *, const char *)
+  -> EXTERN: (111,29) log_printf(const char *, ...)
+  -> EXTERN: (112,21) vpic_simulation::modify(vpic_simulation *, const char *)
+  -> EXTERN: (116,25) log_printf(const char *, ...)
+  -> EXTERN: (117,22) wallclock()
+  -> EXTERN: (121,24) vpic_simulation::advance(vpic_simulation *)
+  -> EXTERN: (121,24) vpic_simulation::advance(vpic_simulation *)
+  -> EXTERN: (123,15) wallclock()
+  -> EXTERN: (135,9) log_printf(const char *, ...)
+  -> EXTERN: (139,25) log_printf(const char *, ...)
+  -> EXTERN: (142,5) unregister_object(void *)
+  -> EXTERN: (143,17) vpic_simulation::finalize(vpic_simulation *)
+  -> EXTERN: (144,5) operator delete(void *)
+  -> EXTERN: (144,5) vpic_simulation::~vpic_simulation(vpic_simulation *)
+  -> EXTERN: (147,25) log_printf(const char *, ...)
+  -> EXTERN: (149,5) halt_services()
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at /usr/projects/vpic/guofan/vpic/deck/main.cc(121,5)
+   remark #15521: loop was not vectorized: loop control variable was not identified. Explicitly compute the iteration count before executing the loop or try using canonical loop form from OpenMP specification
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+/usr/projects/vpic/guofan/vpic/deck/main.cc(65,1):remark #34051: REGISTER ALLOCATION : [main] /usr/projects/vpic/guofan/vpic/deck/main.cc:65
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   11[ rax rdx rcx rbx rsi rdi r8-r11 zmm0]
+        
+    Routine temporaries
+        Total         :     155
+            Global    :      27
+            Local     :     128
+        Regenerable   :      57
+        Spilled       :       2
+        
+    Routine stack
+        Variables     :     280 bytes*
+            Reads     :       5 [2.24e+00 ~ 1.7%]
+            Writes    :       5 [4.00e+00 ~ 3.1%]
+        Spills        :       8 bytes*
+            Reads     :       1 [1.00e+00 ~ 0.8%]
+            Writes    :       1 [1.00e+00 ~ 0.8%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: checkpt_main(vpic_simulation **)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (checkpt_main(vpic_simulation **)) [2/13=15.4%] /usr/projects/vpic/guofan/vpic/deck/main.cc(25,1)
+  -> EXTERN: (26,5) checkpt_ptr(const void *)
+
+
+    Report from: Code generation optimizations [cg]
+
+/usr/projects/vpic/guofan/vpic/deck/main.cc(25,1):remark #34051: REGISTER ALLOCATION : [_Z12checkpt_mainPP15vpic_simulation] /usr/projects/vpic/guofan/vpic/deck/main.cc:25
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    1[ rdi]
+        
+    Routine temporaries
+        Total         :       9
+            Global    :       0
+            Local     :       9
+        Regenerable   :       0
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: restore_main()
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (restore_main()) [3/13=23.1%] /usr/projects/vpic/guofan/vpic/deck/main.cc(36,1)
+  -> EXTERN: (37,5) _cxx_illegal_ptr_copy(void *, const void *)
+  -> EXTERN: (37,5) restore_ptr()
+
+
+    Report from: Code generation optimizations [cg]
+
+/usr/projects/vpic/guofan/vpic/deck/main.cc(36,1):remark #34051: REGISTER ALLOCATION : [_Z12restore_mainv] /usr/projects/vpic/guofan/vpic/deck/main.cc:36
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    3[ rax rsi rdi]
+        
+    Routine temporaries
+        Total         :      12
+            Global    :       9
+            Local     :       3
+        Regenerable   :       3
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: checkpt(const char *, int)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (checkpt(const char *, int)) [4/13=30.8%] /usr/projects/vpic/guofan/vpic/deck/main.cc(48,1)
+  -> EXTERN: (50,18) exit(int)
+  -> EXTERN: (50,18) _nanodelay(uint32_t)
+  -> EXTERN: (50,18) log_printf(const char *, ...)
+  -> EXTERN: (50,18) log_printf(const char *, ...)
+  -> EXTERN: (50,18) log_printf(const char *, ...)
+  -> EXTERN: (51,5) sprintf(char *, const char *, ...)
+  -> EXTERN: (52,25) log_printf(const char *, ...)
+  -> EXTERN: (53,5) checkpt_objects(const char *)
+
+
+    Report from: Code generation optimizations [cg]
+
+/usr/projects/vpic/guofan/vpic/deck/main.cc(48,1):remark #34051: REGISTER ALLOCATION : [_Z7checkptPKci] /usr/projects/vpic/guofan/vpic/deck/main.cc:48
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    7[ rax rdx rcx rsi rdi r8 r12]
+        
+    Routine temporaries
+        Total         :      37
+            Global    :       9
+            Local     :      28
+        Regenerable   :      20
+        Spilled       :       1
+        
+    Routine stack
+        Variables     :     256 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: __sti__$E()
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (__sti__$E()) [13/13=100.0%] <compiler generated>
+  -> EXTERN: /turquoise/usr/projects/hpcsoft/toss3/common/x86_64/gcc/6.4.0/bin/../include/c++/6.4.0/iostream:(74,25) __cxa_atexit(void (*)(void *), void *, void *)
+  -> EXTERN: /turquoise/usr/projects/hpcsoft/toss3/common/x86_64/gcc/6.4.0/bin/../include/c++/6.4.0/iostream:(74,25) std::ios_base::Init::Init(std::ios_base::Init *)
+
+
+    Report from: Code generation optimizations [cg]
+
+<compiler generated>:remark #34051: REGISTER ALLOCATION : [__sti__$E] (null):0
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    3[ rdx rsi rdi]
+        
+    Routine temporaries
+        Total         :      13
+            Global    :       7
+            Local     :       6
+        Regenerable   :       7
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================

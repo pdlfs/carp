@@ -1,0 +1,5 @@
+Magnetic Reconnection Deck for VPIC
+
+Modified to run with 512 ranks and simulate 3584M particles.
+
+The deck runs for approx 19,500 timesteps, and generates a particle dump every 200 timesteps.
