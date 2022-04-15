@@ -20,17 +20,10 @@ void ParseOptions(int argc, char* argv[], VPICWriterOpts& opts) {
         opts.file_out = optarg;
         break;
       case 's':
-<<<<<<< HEAD
-        opts.ts_beg = std::stoi(optarg);
-        break;
-      case 'e':
-        opts.ts_end = std::stoi(optarg);
-=======
         opts.ts_first = std::stoi(optarg);
         break;
       case 'e':
         opts.ts_last = std::stoi(optarg);
->>>>>>> vpicwriter: add params to output only a slice of the timesteps
         break;
       case 'h':
       default:
@@ -44,22 +37,12 @@ int main(int argc, char* argv[]) {
   VPICWriterOpts opts;
   opts.dir_in = "";
   opts.file_out = "";
-<<<<<<< HEAD
-  opts.ts_beg = -1;
-  opts.ts_end = -1;
-
-  ParseOptions(argc, argv, opts);
-
-  if ((opts.dir_in == "") or (opts.file_out == "") or
-      (opts.ts_beg == -1) or (opts.ts_end == -1)) {
-=======
   opts.ts_first = 0;
   opts.ts_last = 0;
 
   ParseOptions(argc, argv, opts);
 
   if ((opts.dir_in == "") or (opts.file_out == "") or (opts.ts_last < opts.ts_first)) {
->>>>>>> vpicwriter: add params to output only a slice of the timesteps
     PrintHelp();
     return 0;
   }
