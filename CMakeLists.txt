@@ -22,7 +22,7 @@ cmake_minimum_required(VERSION 3.1)
 project (carp C CXX)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake")
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # link shared lib with full rpath
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -39,6 +39,12 @@ set_property (CACHE DEBUG_SANITIZER PROPERTY STRINGS
         "Off" "Address" "Thread")
 set (CMAKE_PREFIX_PATH "" CACHE STRING "External dependencies path")
 set (BUILD_SHARED_LIBS "OFF" CACHE BOOL "Build a shared library")
+
+#
+# some of our tools (e.g. vpicwriter_runner) require H5Part (and HDF5).
+# only try to build them if the CARP_H5PART option is set.
+#
+option(CARP_H5PART "Build CARP tools that require H5Part" OFF)
 
 #
 # for best query performance, we want a parallel sort.  CARP
@@ -69,6 +75,9 @@ endif ()
 #
 find_package(Threads REQUIRED)
 find_package(deltafs CONFIG REQUIRED)
+if(CARP_H5PART)
+    find_package(H5PART REQUIRED)
+endif()
 if(CARP_PARALLEL_SORT)
     find_package(TBB CONFIG REQUIRED)
 else()

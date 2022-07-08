@@ -1,16 +1,19 @@
-set(TARGETS compactor fmtcheck rangereader)
+#
+# build simple single file tools
+#
 
-find_package(H5PART REQUIRED)
+function(dotool program)
+    message(STATUS "Adding tool executable: ${program}")
+    add_executable(${program} ${program}_runner.cc)
+    target_link_libraries(${program} PRIVATE carp ${ARGN})
+    target_include_directories(${program} PRIVATE
+     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include;${CMAKE_SOURCE_DIR}/src>")
+endfunction()
 
-if (H5PART_FOUND)
-  set(TARGETS ${TARGETS} vpicwriter)
+
+dotool(compactor)
+dotool(fmtcheck)
+dotool(rangereader)
+if(CARP_H5PART)
+    dotool(vpicwriter H5PART)
 endif()
-
-foreach(TARGET ${TARGETS})
-  message("Building executable: " ${TARGET})
-  add_executable(${TARGET} ${TARGET}_runner.cc)
-  target_link_libraries(${TARGET} PRIVATE carp H5PART)
-  target_include_directories(${TARGET} PRIVATE
-          "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include;${CMAKE_SOURCE_DIR}/src>")
-endforeach()
-
