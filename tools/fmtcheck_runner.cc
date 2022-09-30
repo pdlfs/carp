@@ -5,6 +5,7 @@
 #include "reader/fmt_checker.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 typedef pdlfs::plfsio::RdbOptions RdbOptions;
 
