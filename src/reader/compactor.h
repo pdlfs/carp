@@ -18,7 +18,7 @@ class CompactorLogger {
     epoch_begins_.push_back(now);
 
     if (epoch_begins_.size() != epoch_ends_.size() + 1u) {
-      logf(LOG_WARN, "CompactorLogger: begins/ends mismatched!");
+      logv(__LOG_ARGS__, LOG_WARN, "CompactorLogger: begins/ends mismatched!");
     }
   }
 
@@ -27,7 +27,7 @@ class CompactorLogger {
     epoch_ends_.push_back(now);
 
     if (epoch_begins_.size() != epoch_ends_.size()) {
-      logf(LOG_WARN, "CompactorLogger: begins/ends mismatched!");
+      logv(__LOG_ARGS__, LOG_WARN, "CompactorLogger: begins/ends mismatched!");
     }
   }
 
@@ -97,15 +97,15 @@ class Compactor : public ReaderBase {
     std::string dest = options_.output_path;
 
     Status s = options_.env->CreateDir(dest.c_str());
-    if (!s.ok()) {
-      printf("dir create error: %s\n", s.ToString().c_str());
+    if (!s.ok() && !s.IsAlreadyExists()) {
+      logv(__LOG_ARGS__, LOG_ERRO, "dir create error: %s", s.ToString().c_str());
     }
 
     if (epoch != -1) {
       dest = dest + "/" + std::to_string(epoch);
       s = options_.env->CreateDir(dest.c_str());
-      if (!s.ok()) {
-        printf("dir create error: %s\n", s.ToString().c_str());
+      if (!s.ok() && !s.IsAlreadyExists()) {
+        logv(__LOG_ARGS__, LOG_ERRO, "dir create error: %s", s.ToString().c_str());
       }
     }
 

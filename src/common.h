@@ -8,15 +8,25 @@
 
 #include <math.h>
 
-#define LOG_ERRO 5
-#define LOG_WARN 4
+#define LOG_LVL 3
+
+int logv2(int lvl, const char* fmt, ...);
+
+#define LOG_ERRO 1
+#define LOG_WARN 2
 #define LOG_INFO 3
-#define LOG_DBUG 2
-#define LOG_DBG2 1
+#define LOG_DBUG 4
+#define LOG_DBG2 5
+#define LOG_DBG3 6
 
-#define LOG_LVL 2
+#define DEF_LOGGER ::pdlfs::Logger::Default()
+#define __LOG_ARGS__ DEF_LOGGER, __FILE__, __LINE__
 
-int logf(int lvl, const char* fmt, ...);
+int logv(pdlfs::Logger* info_log, const char* file, int line, int level,
+         const char* fmt, ...);
+int loge(const char* op, const char* path);
+
+#define EXPAND_ARGS(...) __VA_ARGS__
 
 namespace pdlfs {
 namespace carp {

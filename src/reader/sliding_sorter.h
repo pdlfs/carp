@@ -16,7 +16,7 @@ namespace plfsio {
 class SlidingSorter {
  public:
   explicit SlidingSorter(std::string dir_out,
-                         CachingDirReader<SequentialFile>& fdcache)
+                         CachingDirReader< SequentialFile >& fdcache)
       : num_ranks_(0), last_cutoff_(0), dir_out_(dir_out), fdcache_(fdcache) {}
 
   Status AddManifestItem(const PartitionManifestItem& item);
@@ -112,7 +112,7 @@ class SlidingSorter {
 
   void AddPair(float key, Slice& val) { merge_pool_.push(KVItem(key, val)); }
 
-  static const size_t kMaxValSz = 60;
+  static const size_t kMaxValSz = 80;
 
   struct KVItem {
     float key;
@@ -136,11 +136,11 @@ class SlidingSorter {
 
   std::string dir_out_;
 
-  CachingDirReader<SequentialFile>& fdcache_;
-  std::vector<size_t> rank_cursors_;
-  std::priority_queue<KVItem, std::vector<KVItem>, std::greater<KVItem> >
+  CachingDirReader< SequentialFile >& fdcache_;
+  std::vector< size_t > rank_cursors_;
+  std::priority_queue< KVItem, std::vector< KVItem >, std::greater< KVItem > >
       merge_pool_;
-  PlfsWriter plfs_;
+  PlfsWriterWrapper plfs_;
 };
 }  // namespace plfsio
 }  // namespace pdlfs

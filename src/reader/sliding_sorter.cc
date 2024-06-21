@@ -50,7 +50,8 @@ Status SlidingSorter::AddManifestItem(const PartitionManifestItem& item) {
   cursor += req.offset + req.bytes;
 
   AddSST(req.slice, item_sz, item.part_item_count);
-  delete buf;
+  delete[] buf;
+
   return s;
 }
 }  // namespace plfsio

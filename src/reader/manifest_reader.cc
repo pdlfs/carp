@@ -35,7 +35,7 @@ Status PartitionManifestReader::ReadManifest(int rank, Slice& footer_data,
     uint32_t num_ep_written = DecodeFixed32(&footer_data[epoch_offset]);
     uint64_t off_prev =
         DecodeFixed64(&footer_data[epoch_offset + sizeof(uint32_t)]);
-    logf(LOG_DBUG, "[EPOCH] Index: %u, Offset: %lu\n", num_ep_written,
+    logv(__LOG_ARGS__, LOG_DBUG, "[EPOCH] Index: %u, Offset: %lu\n", num_ep_written,
          off_prev);
 
     ReadFooterEpoch(num_ep_written, rank, footer_data, epoch_offset + 12,
@@ -76,7 +76,7 @@ void PartitionManifestReader::ReadFooterEpoch(int epoch, int rank, Slice& data,
     item.part_item_oob = DecodeFixed32(&data[cur_offset + offsets_[8]]);
 
     std::string item_dbg = item.ToString();
-    logf(LOG_DBG2, "%s\n", item_dbg.c_str());
+    logv(__LOG_ARGS__, LOG_DBG2, "%s\n", item_dbg.c_str());
 
     if (file_out) {
       std::string item_csv = item.ToCSVString();

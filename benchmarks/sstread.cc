@@ -2,19 +2,18 @@
 // Created by Ankush on 5/24/2021.
 //
 
-#include <stdio.h>
-#include <unistd.h>
-
 #include "common.h"
 
 #include <carp/manifest.h>
 #include <reader/query_utils.h>
 #include <reader/range_reader.h>
+#include <stdio.h>
+#include <unistd.h>
 
 namespace pdlfs {
 namespace plfsio {
 
-template <typename T>
+template < typename T >
 class SimpleReader {
  public:
   SimpleReader(const RdbOptions& options)
@@ -43,14 +42,15 @@ class SimpleReader {
     int start_rank = (rand() % 5) * 100;
     SingleBenchmark(start_rank, start_rank + 64, 1, 10);
 
-    logf(LOG_WARN, "Size estimate only valid if each RDB has sufficient data");
+    logv(__LOG_ARGS__, LOG_WARN,
+         "Size estimate only valid if each RDB has sufficient data");
   }
 
   void SingleBenchmark(int first_rank, int last_rank, int items_per_rank,
                        int size_item_mb) {
     Prepare();
     PartitionManifestMatch match;
-    std::vector<KeyPair> query_results;
+    std::vector< KeyPair > query_results;
 
     for (int rank = first_rank; rank < last_rank; rank++) {
       GenRandomMatches(rank, size_item_mb, items_per_rank, match);
@@ -70,9 +70,9 @@ class SimpleReader {
       printf("error: %s\n", s.ToString().c_str());
     }
 
-#define USTOSEC(x) ((x)*1e-6)
+#define USTOSEC(x) ((x) * 1e-6)
 
-    logf(LOG_INFO,
+    logv(__LOG_ARGS__, LOG_INFO,
          "[SingleBenchmark] First rank: %d, last rank: %d, total data read: %d "
          "MB, time taken: %.3fs\n",
          first_rank, last_rank,
@@ -117,7 +117,7 @@ class SimpleReader {
       offset_sz += sst_sz;
 
       match.AddItem(item);
-      logf(LOG_DBUG, "%s\n", item.ToString().c_str());
+      logv(__LOG_ARGS__, LOG_DBUG, "%s\n", item.ToString().c_str());
     }
   }
 
@@ -136,13 +136,13 @@ class SimpleReader {
   }
 
   Status ReadSSTs(PartitionManifestMatch& match,
-                  std::vector<KeyPair>& query_results) {
-    QueryUtils::ThreadSafetyWarning<T>();
+                  std::vector< KeyPair >& query_results) {
+    QueryUtils::ThreadSafetyWarning< T >();
 
     Slice slice;
     std::string scratch;
 
-    std::vector<SSTReadWorkItem<T>> work_items;
+    std::vector< SSTReadWorkItem< T > > work_items;
     work_items.resize(match.Size());
     query_results.resize(match.TotalMass());
     task_tracker_.Reset();
@@ -164,7 +164,7 @@ class SimpleReader {
       work_items[i].fdcache = &fdcache_;
       work_items[i].task_tracker = &task_tracker_;
 
-      thpool_->Schedule(QueryUtils::SSTReadWorker<T>, (void*)&work_items[i]);
+      thpool_->Schedule(QueryUtils::SSTReadWorker< T >, (void*)&work_items[i]);
     }
 
     assert(mass_sum == match.TotalMass());
@@ -175,7 +175,7 @@ class SimpleReader {
   }
 
   Status RankwiseReadSSTs(PartitionManifestMatch& match,
-                          std::vector<KeyPair>& query_results) {
+                          std::vector< KeyPair >& query_results) {
     Slice slice;
     std::string scratch;
 
@@ -185,14 +185,14 @@ class SimpleReader {
     uint64_t key_sz, val_sz;
     match.GetKVSizes(key_sz, val_sz);
 
-    std::vector<int> ranks;
+    std::vector< int > ranks;
     match.GetUniqueRanks(ranks);
 
-    std::vector<RankwiseSSTReadWorkItem<T>> work_items;
+    std::vector< RankwiseSSTReadWorkItem< T > > work_items;
     work_items.resize(ranks.size());
     query_results.resize(match.TotalMass());
 
-    logf(LOG_INFO, "Matching ranks: %zu\n", ranks.size());
+    logv(__LOG_ARGS__, LOG_INFO, "Matching ranks: %zu\n", ranks.size());
 
     for (uint32_t i = 0; i < ranks.size(); i++) {
       int rank = ranks[i];
@@ -208,7 +208,7 @@ class SimpleReader {
       work_items[i].fdcache = &fdcache_;
       work_items[i].task_tracker = &task_tracker_;
 
-      thpool_->Schedule(QueryUtils::RankwiseSSTReadWorker<T>,
+      thpool_->Schedule(QueryUtils::RankwiseSSTReadWorker< T >,
                         (void*)&work_items[i]);
     }
 
@@ -224,11 +224,11 @@ class SimpleReader {
   int num_ranks_;
   ThreadPool* thpool_;
   TaskCompletionTracker task_tracker_;
-  CachingDirReader<RandomAccessFile> fdcache_;
+  CachingDirReader< RandomAccessFile > fdcache_;
 };
 
 void RunBenchmark(RdbOptions& options) {
-  SimpleReader<RandomAccessFile> simple_reader(options);
+  SimpleReader< RandomAccessFile > simple_reader(options);
   simple_reader.BenchmarkSuite();
 }
 }  // namespace plfsio

@@ -7,7 +7,7 @@
 #include "common.h"
 
 static void plfsdir_error_printer(const char* msg, void*) {
-  logf(LOG_ERRO, msg);
+  logv(__LOG_ARGS__, LOG_ERRO, msg);
 }
 
 static std::string gen_plfsdir_conf(pdlfs::plfsio::PlfsOpts& dirc, int rank) {
@@ -41,7 +41,7 @@ Status PlfsWrapper::OpenDir(const char* path, int rank) {
   opts_.skip_checksums = 1;
   opts_.io_engine = DELTAFS_PLFSDIR_RANGEDB;
   // XXX: tmp, hardcoded
-  opts_.particle_size = 60;
+  opts_.particle_size = 64;
   opts_.particle_buf_size = 2097152;
   opts_.particle_count = 1;  // not used
   opts_.bgdepth = 4;
@@ -69,14 +69,14 @@ Status PlfsWrapper::OpenDirInternal(const char* path, int rank) {
   plfstp_ = deltafs_tp_init(opts_.bgdepth);
   deltafs_plfsdir_set_thread_pool(plfshdl_, plfstp_);
   plfsenv_ = deltafs_env_init(
-      1, reinterpret_cast<void**>(const_cast<char**>(&opts_.env)));
+      1, reinterpret_cast< void** >(const_cast< char** >(&opts_.env)));
   deltafs_plfsdir_set_env(plfshdl_, plfsenv_);
   deltafs_plfsdir_set_err_printer(plfshdl_, &plfsdir_error_printer, NULL);
   rv = deltafs_plfsdir_open(plfshdl_, path);
   if (rv != 0) {
     s = Status::IOError("cannot open plfsdir");
   } else {
-    logf(LOG_INFO,
+    logv(__LOG_ARGS__, LOG_INFO,
          "plfsdir (via deltafs-LT, env=%s, io_engine=%d, "
          "unordered=%d, leveldb_fmt=%d) opened (rank 0)\n>>> bg "
          "thread pool size: %d",

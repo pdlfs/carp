@@ -31,14 +31,14 @@
 
 namespace pdlfs {
 namespace plfsio {
-void feature_prompt() { logf(LOG_INFO, TBB_PROMPT); }
+void feature_prompt() { logv(__LOG_ARGS__, LOG_INFO, TBB_PROMPT); }
 
 void ReadCSV(Env* env, const char* csv_path, std::vector< Query >& qvec) {
   std::string data;
 
   Status s = ReadFileToString(env, csv_path, &data);
   if (!s.ok()) {
-    logf(LOG_ERRO, "error: %s", s.ToString().c_str());
+    logv(__LOG_ARGS__, LOG_ERRO, "error: %s", s.ToString().c_str());
     exit(-1);
   }
 
@@ -54,7 +54,8 @@ void ReadCSV(Env* env, const char* csv_path, std::vector< Query >& qvec) {
         sscanf(data_ptr + i, "%d,%f,%f\n%n", &epoch, &qbeg, &qend, &bytes_read);
 
     if (items_read != 3) {
-      logf(LOG_ERRO, "CSV parsing failed! Items read: %d", items_read);
+      logv(__LOG_ARGS__, LOG_ERRO, "CSV parsing failed! Items read: %d",
+           items_read);
       exit(-1);
     }
 
@@ -63,7 +64,7 @@ void ReadCSV(Env* env, const char* csv_path, std::vector< Query >& qvec) {
     Query q(epoch, qbeg, qend);
     qvec.push_back(q);
 
-    logf(LOG_INFO, "Query parsed: %s", q.ToString().c_str());
+    logv(__LOG_ARGS__, LOG_INFO, "Query parsed: %s", q.ToString().c_str());
   }
 }
 
@@ -71,7 +72,7 @@ void ReadCSV(Env* env, const char* csv_path, std::vector< Query >& qvec) {
 }  // namespace pdlfs
 
 void PrintHelp() {
-  printf(
+  logv(__LOG_ARGS__, LOG_INFO, 
       "./prog [-p parallelism] [-a analytics] [-q query -s query_start -e "
       "query_end -r rank] [-b batch_query_path ]\n");
 }
@@ -140,8 +141,8 @@ void ParseOptions(int argc, char* argv[], pdlfs::plfsio::RdbOptions& options) {
 
 #define BOOLS(p) ((p) ? "ON" : "OFF")
 
-  printf("[Threads] %d\n", options.parallelism);
-  printf("[Analytics] %s\n", BOOLS(options.analytics_on));
+  logv(__LOG_ARGS__, LOG_INFO, "[Threads] %d\n", options.parallelism);
+  logv(__LOG_ARGS__, LOG_INFO, "[Analytics] %s\n", BOOLS(options.analytics_on));
 
   std::string full_scan = "";
   if (options.full_scan) {
@@ -149,13 +150,13 @@ void ParseOptions(int argc, char* argv[], pdlfs::plfsio::RdbOptions& options) {
   }
 
   if (options.query_on) {
-    printf("[Query] Mode: Single%s\n", full_scan.c_str());
-    printf("[Query] %.3f to %.3f\n", options.query_begin, options.query_end);
+    logv(__LOG_ARGS__, LOG_INFO, "[Query] Mode: Single%s\n", full_scan.c_str());
+    logv(__LOG_ARGS__, LOG_INFO, "[Query] %.3f to %.3f\n", options.query_begin, options.query_end);
   } else if (options.query_batch) {
-    printf("[Query] Mode: Batch%s\n", full_scan.c_str());
-    printf("[Query] Batchfile: %s\n", options.query_batch_in.c_str());
+    logv(__LOG_ARGS__, LOG_INFO, "[Query] Mode: Batch%s\n", full_scan.c_str());
+    logv(__LOG_ARGS__, LOG_INFO, "[Query] Batchfile: %s\n", options.query_batch_in.c_str());
   } else {
-    printf("[Query] Mode: Off\n");
+    logv(__LOG_ARGS__, LOG_INFO, "[Query] Mode: Off\n");
   }
 }
 
@@ -165,14 +166,14 @@ int main(int argc, char* argv[]) {
   ParseOptions(argc, argv, options);
 
   if (options.query_on && !options.analytics_on && options.query_epoch < 0) {
-    printf("[ERROR] Epoch < 0\n");
+    logv(__LOG_ARGS__, LOG_INFO, "[ERROR] Epoch < 0\n");
     exit(EXIT_FAILURE);
   }
 
   options.env = pdlfs::port::PosixGetDefaultEnv();
 
   if (!options.env->FileExists(options.data_path.c_str())) {
-    printf("Input directory does not exist\n");
+    logv(__LOG_ARGS__, LOG_INFO, "Input directory does not exist\n");
     exit(EXIT_FAILURE);
   }
 
@@ -188,7 +189,8 @@ int main(int argc, char* argv[]) {
     }
   } else if (options.query_batch) {
     if (options.full_scan) {
-      logf(LOG_ERRO, "Full Scan not implemented on batch queries");
+      logv(__LOG_ARGS__, LOG_ERRO,
+           "Full Scan not implemented on batch queries");
       exit(-1);
     }
     std::vector< pdlfs::plfsio::Query > qvec;

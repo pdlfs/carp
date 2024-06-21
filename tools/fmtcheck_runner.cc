@@ -28,7 +28,7 @@ void ParseOptions(int argc, char* argv[], RdbOptions& options) {
   }
 
   if (!options.env->FileExists(options.data_path.c_str())) {
-    logf(LOG_ERRO, "Dir not set, or set dir does not exist!");
+    logv(__LOG_ARGS__, LOG_ERRO, "Dir not set, or set dir does not exist!");
     PrintHelp(argv[0]);
     exit(1);
   }
@@ -40,6 +40,6 @@ int main(int argc, char* argv[]) {
   ParseOptions(argc, argv, options);
   pdlfs::plfsio::FmtChecker fmt_checker(options);
   pdlfs::Status s = fmt_checker.Run();
-  logf(LOG_INFO, "Return Status: %s\n", s.ToString().c_str());
+  logv(__LOG_ARGS__, LOG_INFO, "Return Status: %s\n", s.ToString().c_str());
   return 0;
 }

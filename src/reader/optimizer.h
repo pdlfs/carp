@@ -5,6 +5,7 @@
 #pragma once
 
 #include "carp/manifest.h"
+#include "common.h"
 
 namespace {
 class PMISort {
@@ -66,7 +67,7 @@ class QueryMatchOptimizer {
     std::sort(match_ranks.begin(), match_ranks.end());
 
     if (!match_ranks.empty()) {
-      logf(LOG_INFO, "Matching Ranks, Count: %zu (Min: %d, Max: %d)\n",
+      logv(__LOG_ARGS__, LOG_INFO, "Matching Ranks, Count: %zu (Min: %d, Max: %d)\n",
            match_ranks.size(), match_ranks[0],
            match_ranks[match_ranks.size() - 1]);
     }
@@ -88,7 +89,7 @@ class QueryMatchOptimizer {
       }
     }
 
-    logf(LOG_INFO,
+    logv(__LOG_ARGS__, LOG_INFO,
          "Match Optimization complete, in: %" PRIu64 ", out: %" PRIu64
          " items\n"
          "Size Inflation: %.2f%%",

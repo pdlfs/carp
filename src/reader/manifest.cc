@@ -73,7 +73,8 @@ int PartitionManifest::GetOverlappingEntries(int epoch, float range_begin,
   uint64_t mass_epoch = mass_epoch_[epoch];
   uint64_t mass_match = match.TotalMass();
 
-  logf(LOG_INFO, "Query Selectivity: %.4f %% (%lu items, %lu total)\n",
+  logv(__LOG_ARGS__, LOG_INFO,
+       "Query Selectivity: %.4f %% (%lu items, %lu total)\n",
        mass_match * 100.0 / mass_epoch, mass_match, mass_epoch);
 
   assert(sizes_set_);
@@ -95,7 +96,8 @@ int PartitionManifest::GetOverlappingEntries(Query& q,
   uint64_t mass_epoch = mass_epoch_[q.epoch];
   uint64_t mass_match = match.TotalMass();
 
-  logf(LOG_INFO, "Query Selectivity: %.4f %% (%lu items, %lu total)\n",
+  logv(__LOG_ARGS__, LOG_INFO,
+       "Query Selectivity: %.4f %% (%lu items, %lu total)\n",
        mass_match * 100.0 / mass_epoch, mass_match, mass_epoch);
 
   assert(sizes_set_);
@@ -120,8 +122,8 @@ Status PartitionManifest::GenOverlapStats(const char* dir_path,
     delete fd;
   }
 
-  fprintf(stderr, "[Analytics] Total SSTs: %zu, zero width: %d\n",
-          items_.size(), zero_sst_cnt_);
+  logv(__LOG_ARGS__, LOG_INFO, "[Analytics] Total SSTs: %zu, zero width: %d\n",
+       items_.size(), zero_sst_cnt_);
 
   return Status::OK();
 }
@@ -183,15 +185,15 @@ void PartitionManifest::GenEpochStatsCSV(const int epoch,
     max_match_mass = std::max(max_match_mass, match.TotalMass());
   }
 
-  fprintf(stderr, "[Analytics] [epoch %d] Max Overlap: %.2f%%\n", epoch,
-          max_match_mass * 100.0f / epoch_mass);
+  logv(__LOG_ARGS__, LOG_INFO, "[Analytics] [epoch %d] Max Overlap: %.2f%%\n",
+       epoch, max_match_mass * 100.0f / epoch_mass);
 
   fd->Close();
 }
 
 void PartitionManifestMatch::Print() {
   for (size_t i = 0; i < Size(); i++) {
-    logf(LOG_DBUG, "%s\n", items_[i].ToString().c_str());
+    logv(__LOG_ARGS__, LOG_DBUG, "%s\n", items_[i].ToString().c_str());
   }
 }
 }  // namespace plfsio

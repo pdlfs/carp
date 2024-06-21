@@ -4,8 +4,22 @@
 
 #pragma once
 
+#include "common.h"
+
+#include <algorithm>
+#include <map>
+#include <pdlfs-common/env.h>
+#include <pdlfs-common/mutexlock.h>
+#include <pdlfs-common/port_posix.h>
+
 namespace pdlfs {
 namespace plfsio {
+
+/* TaskCompletionTracker: Used to track fine-grained profiling times for
+ * individual SSTReadWorker tasks. For each task, two times are recorded:
+ * IO time: time taken to retrieve SST data from disk
+ * Total time: IO time, plus time taken to decode SST key blocks
+ */
 class TaskCompletionTracker {
 #define MAP_HAS(m, k) ((m).find(k) != (m).end())
  public:
@@ -65,23 +79,28 @@ class TaskCompletionTracker {
     MutexLock ml(&mutex_);
     while (tasks_completed_ < target) {
       cv_.TimedWait(1e3);
-      //      logf(LOG_INFO, "Waiting... \n");
+      //      logf(__LOG_ARGS__, LOG_INFO, "Waiting... \n");
     }
   }
 
   void AnalyzeTimes() {
+    logv(__LOG_ARGS__, LOG_INFO, "---------");
+    logv(__LOG_ARGS__, LOG_INFO, "Fine-grained stats for I/O tasks: ");
+
     uint64_t io_sum = VecSum(time_io_);
     uint64_t total_sum = VecSum(time_total_);
 
-    logf(LOG_INFO, "IO Sum: %.1fs, Total Sum: %.1fs", io_sum / 1e6,
-         total_sum / 1e6);
+    logv(__LOG_ARGS__, LOG_INFO, "- Total time for SST I/O: %.2f ms",
+         io_sum / 1e3);
+    logv(__LOG_ARGS__, LOG_INFO, "- Total time for SST I/O + Decode: %.2f ms",
+         total_sum / 1e3);
 
-    std::vector<float> all_times;
+    std::vector< float > all_times;
     float all_total = 0;
-    std::map<pid_t, uint64_t>::iterator it = tid_total_map_.begin();
+    std::map< pid_t, uint64_t >::iterator it = tid_total_map_.begin();
 
     for (; it != tid_total_map_.end(); it++) {
-      float time_sec = it->second / 1e6;
+      float time_sec = it->second / 1e3;
       all_times.push_back(time_sec);
       all_total += time_sec;
     }
@@ -93,14 +112,14 @@ class TaskCompletionTracker {
       all_times_str += std::to_string(all_times[i]) + " ";
     }
 
-    logf(LOG_INFO,
-         "Thread-wise times, avg: %.1fs\n"
-         "Individual times: %s",
-         all_total * 1.0f / all_times.size(), all_times_str.c_str());
+    logv(__LOG_ARGS__, LOG_INFO, "- Average time per I/O thread: %.2fms",
+         all_total * 1.0f / all_times.size());
+
+    logv(__LOG_ARGS__, LOG_DBUG, "- Individual times: %s", all_times_str.c_str());
   }
 
  private:
-  uint64_t VecSum(const std::vector<uint64_t>& v) const {
+  uint64_t VecSum(const std::vector< uint64_t >& v) const {
     uint64_t sum = 0;
     uint64_t sum_sq = 0;
     for (size_t i = 0; i < v.size(); i++) {
@@ -113,7 +132,7 @@ class TaskCompletionTracker {
     double var = (sum_sq / n) - (avg * avg);
     double std = pow(var, 0.5);
 
-    logf(LOG_INFO, "Vec Stats, Avg: %.1lf, Std: %.1lf", avg, std);
+    logv(__LOG_ARGS__, LOG_DBUG, "Vec Stats, Avg: %.1lf, Std: %.1lf", avg, std);
 
     return sum;
   }
@@ -122,12 +141,12 @@ class TaskCompletionTracker {
   port::CondVar cv_;
   Env* const env_;
   uint32_t tasks_completed_;
-  std::map<int, uint64_t> ts_beg_map_;
-  std::map<int, uint64_t> ts_io_map_;
-  std::map<int, pid_t> tid_rid_map_;
-  std::map<pid_t, uint64_t> tid_total_map_;
-  std::vector<uint64_t> time_io_;
-  std::vector<uint64_t> time_total_;
+  std::map< int, uint64_t > ts_beg_map_;
+  std::map< int, uint64_t > ts_io_map_;
+  std::map< int, pid_t > tid_rid_map_;
+  std::map< pid_t, uint64_t > tid_total_map_;
+  std::vector< uint64_t > time_io_;
+  std::vector< uint64_t > time_total_;
 #undef MAP_HAS
 };
 }  // namespace plfsio

@@ -5,22 +5,34 @@
 #include "range_reader.h"
 
 #include "optimizer.h"
+#include "perf.h"
 #include "query_utils.h"
 #include "reader_base.h"
 
 #ifdef CARP_PARALLEL_SORT
 #include <oneapi/tbb/parallel_sort.h>
-#define CARP_SORT oneapi::tbb::parallel_sort
-#else
-#define CARP_SORT std::sort
 #endif
+
+namespace {
+template < typename RandomIt, typename Compare >
+void carp_sort(RandomIt first, RandomIt last, Compare comp) {
+#ifdef CARP_PARALLEL_SORT
+  oneapi::tbb::parallel_sort(first, last, comp);
+#else
+  std::sort(first, last, comp);
+#endif
+}
+}  // namespace
 
 namespace pdlfs {
 namespace plfsio {
 
 template < typename T >
 Status RangeReader< T >::ReadManifest(const std::string& dir_path) {
-  logger_.RegisterBegin("MFREAD");
+  logv(__LOG_ARGS__, LOG_INFO, "---------");
+  logv(__LOG_ARGS__, LOG_INFO, "Reading all rdb manifests...\n");
+
+  logger_.RegisterBegin(kPerfEventManifestRead);
 
   Status s = Status::OK();
 
@@ -47,12 +59,12 @@ Status RangeReader< T >::ReadManifest(const std::string& dir_path) {
 
   uint64_t key_sz, val_sz;
   manifest_.GetKVSizes(key_sz, val_sz);
-  logf(LOG_INFO, "Key/Value Sizes: %lu/%lu\n", key_sz, val_sz);
+  logv(__LOG_ARGS__, LOG_INFO, "Key/Value Sizes: %lu/%lu\n", key_sz, val_sz);
 
-  logger_.RegisterEnd("MFREAD");
+  logger_.RegisterEnd(kPerfEventManifestRead);
 
   if (options_.analytics_on) {
-    logf(LOG_INFO, "Running analytics...\n");
+    logv(__LOG_ARGS__, LOG_INFO, "Running analytics...\n");
     /* write manifest to plfs/particle/../../plots */
     std::string exp_path = dir_path + "/../../plots";
 
@@ -64,17 +76,20 @@ Status RangeReader< T >::ReadManifest(const std::string& dir_path) {
     if (s.ok()) manifest_.GenOverlapStats(exp_path.c_str(), env);
   }
 
+  logv(__LOG_ARGS__, LOG_INFO, "Manifest read complete.");
+
   return s;
 }
 
 template < typename T >
 Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
-  logger_.RegisterBegin("SSTREAD");
+  logger_.RegisterBegin(kPerfEventSstRead);
+
   Status s = Status::OK();
   std::vector< KeyPair > matching_results;
 
   for (int rank = 0; rank < manifest_.NumRanks(); rank++) {
-    logf(LOG_INFO, "Reading Rank %d\n", rank);
+    logv(__LOG_ARGS__, LOG_INFO, "Reading Rank %d\n", rank);
     PartitionManifestMatch match_obj_in, match_obj;
     manifest_.GetAllEntries(epoch, rank, match_obj);
 
@@ -88,22 +103,23 @@ Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
     }
   }
 
-  logger_.RegisterEnd("SSTREAD");
-  logger_.RegisterBegin("SORT");
+  logger_.RegisterEnd(kPerfEventSstRead);
 
-  CARP_SORT(matching_results.begin(), matching_results.end(),
+  logger_.RegisterBegin(kPerfEventSstMergeSort);
+  carp_sort(matching_results.begin(), matching_results.end(),
             KeyPairComparator());
-  logger_.RegisterEnd("SORT");
+  logger_.RegisterEnd(kPerfEventSstMergeSort);
 
-  logf(LOG_INFO, "Query Results: %zu elements found\n",
+  logv(__LOG_ARGS__, LOG_INFO, "Query Results: %zu elements found\n",
        matching_results.size());
 
 #define ITEM(ptile) \
   matching_results[((ptile) * (matching_results.size() - 1) / 100)].key
 
   if (!matching_results.empty()) {
-    logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0),
-         ITEM(10), ITEM(50), ITEM(100));
+    logv(__LOG_ARGS__, LOG_INFO,
+         "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0), ITEM(10),
+         ITEM(50), ITEM(100));
   }
 
 #undef ITEM
@@ -118,7 +134,11 @@ Status RangeReader< T >::QueryNaive(int epoch, float rbegin, float rend) {
 template < typename T >
 Status RangeReader< T >::QueryParallel(int rank, int epoch, float rbegin,
                                        float rend) {
-  logger_.RegisterBegin("SSTREAD");
+  logv(__LOG_ARGS__, LOG_INFO, "---------");
+  logv(__LOG_ARGS__, LOG_INFO,
+       "Processing range query. Epoch: %d, (%.2f - %.2f)", epoch, rbegin, rend);
+
+  logger_.RegisterBegin(kPerfEventSstRead);
   Status s = Status::OK();
 
   PartitionManifestMatch match_obj_in, match_obj;
@@ -131,28 +151,30 @@ Status RangeReader< T >::QueryParallel(int rank, int epoch, float rbegin,
   // s = QueryMatchOptimizer::OptimizeSchedule(match_obj);
   if (!s.ok()) return s;
 
-  logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
-       match_obj.TotalMass());
+  logv(__LOG_ARGS__, LOG_INFO, "Query Match: %llu SSTs found (%llu items)",
+       match_obj.Size(), match_obj.TotalMass());
 
   match_obj.Print();
 
   std::vector< KeyPair > query_results;
   ReadSSTs(match_obj, query_results);
 
-  logger_.RegisterEnd("SSTREAD");
-  logger_.RegisterBegin("SORT");
+  logger_.RegisterEnd(kPerfEventSstRead);
 
-  CARP_SORT(query_results.begin(), query_results.end(), KeyPairComparator());
-  logger_.RegisterEnd("SORT");
+  logger_.RegisterBegin(kPerfEventSstMergeSort);
+  carp_sort(query_results.begin(), query_results.end(), KeyPairComparator());
+  logger_.RegisterEnd(kPerfEventSstMergeSort);
 
-  logf(LOG_INFO, "Query Results: %zu elements found\n", query_results.size());
+  logv(__LOG_ARGS__, LOG_INFO, "Query Results: %zu elements found\n",
+       query_results.size());
 
 #define ITEM(ptile) \
   query_results[((ptile) * (query_results.size() - 1) / 100)].key
 
   if (!query_results.empty()) {
-    logf(LOG_INFO, "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0),
-         ITEM(10), ITEM(50), ITEM(100));
+    logv(__LOG_ARGS__, LOG_INFO,
+         "Query Results: preview: %.3f %.3f %.3f ... %.3f\n", ITEM(0), ITEM(10),
+         ITEM(50), ITEM(100));
   }
 
 #undef ITEM
@@ -168,9 +190,13 @@ Status RangeReader< T >::QueryParallel(int rank, int epoch, float rbegin,
   double qsel_key = match_cnt * 1.0 / match_obj.DataSize();
   double qsel_sst = match_obj.GetSelectivity();
 
-  logf(LOG_INFO, "Num hits: %" PRIu64 "\n", match_cnt);
-  logf(LOG_INFO, "Keys sel: %.4f%%, SST Sel: %.4f%%\n", qsel_key * 100,
-       qsel_sst * 100);
+  logv(__LOG_ARGS__, LOG_INFO, "Total keys matched: %" PRIu64, match_cnt);
+  logv(__LOG_ARGS__, LOG_INFO,
+       "Query key selectivity: %.2f%%, SST selectivity: %.2f%%",
+       qsel_key * 100, qsel_sst * 100);
+
+  logv(__LOG_ARGS__, LOG_INFO, "---------");
+  logv(__LOG_ARGS__, LOG_INFO, "Query computed. Reporting performance stats.");
 
   logger_.PrintStats();
   logger_.LogQuery(dir_path_.c_str(), epoch, rbegin, rend, qsel_sst, qsel_key);
@@ -181,30 +207,37 @@ Status RangeReader< T >::QueryParallel(int rank, int epoch, float rbegin,
 
 template < typename T >
 Status RangeReader< T >::QuerySequential(int epoch, float rbegin, float rend) {
-  logger_.RegisterBegin("SSTREAD");
+  logger_.RegisterBegin(kPerfEventSstRead);
 
   PartitionManifestMatch match_obj;
   manifest_.GetOverlappingEntries(epoch, rbegin, rend, match_obj);
-  logf(LOG_INFO, "Query Match: %llu SSTs found (%llu items)", match_obj.Size(),
-       match_obj.TotalMass());
+  logv(__LOG_ARGS__, LOG_INFO, "Query Match: %llu SSTs found (%llu items)",
+       match_obj.Size(), match_obj.TotalMass());
 
   Slice slice;
   std::string scratch;
   for (uint32_t i = 0; i < match_obj.Size(); i++) {
     PartitionManifestItem& item = match_obj[i];
-    // logf(LOG_DBUG, "Item Rank: %d, Offset: %llu\n", item.rank,
+    // logf(__LOG_ARGS__, LOG_DBUG, "Item Rank: %d, Offset: %llu\n", item.rank,
     // item.offset);
     ReadBlock(item.rank, item.offset, item.part_item_count * 60, slice,
               scratch);
   }
 
-  logger_.RegisterEnd("SSTREAD");
+  logger_.RegisterEnd(kPerfEventSstRead);
 
-  logger_.RegisterBegin("SORT");
-  CARP_SORT(query_results_.begin(), query_results_.end(), KeyPairComparator());
-  logger_.RegisterEnd("SORT");
+  logger_.RegisterBegin(kPerfEventSstMergeSort);
+  carp_sort(query_results_.begin(), query_results_.end(), KeyPairComparator());
+#ifdef CARP_PARALLEL_SORT
+  oneapi::tbb::parallel_sort(query_results_.begin(), query_results_.end(),
+                             KeyPairComparator());
+#else
+  std::sort(query_results_.begin(), query_results_.end(), KeyPairComparator());
+#endif
+  logger_.RegisterEnd(kPerfEventSstMergeSort);
 
-  logf(LOG_INFO, "Query Results: %zu elements found\n", query_results_.size());
+  logv(__LOG_ARGS__, LOG_INFO, "Query Results: %zu elements found\n",
+       query_results_.size());
 
   logger_.PrintStats();
 
@@ -218,7 +251,7 @@ Status RangeReader< T >::AnalyzeManifest(const std::string& dir_path,
   s = ReadManifest(dir_path);
   if (!s.ok()) return s;
 
-  logger_.PrintSingleStat("MFREAD");
+  logger_.PrintSingleStat(kPerfEventManifestRead);
 
   QueryUtils::SummarizeManifest(manifest_);
 
@@ -283,8 +316,9 @@ Status RangeReader< T >::ReadSSTs(PartitionManifestMatch& match,
   std::vector< int > ranks;
   match.GetUniqueRanks(ranks);
   if (!ranks.empty()) {
-    logf(LOG_INFO, "Matching Ranks, Count: %zu (Min: %d, Max: %d)\n",
-         ranks.size(), ranks[0], ranks[ranks.size() - 1]);
+    logv(__LOG_ARGS__, LOG_INFO,
+         "Matching Ranks, Count: %zu (Min: %d, Max: %d)\n", ranks.size(),
+         ranks[0], ranks[ranks.size() - 1]);
   }
 
   for (uint32_t i = 0; i < match.Size(); i++) {
@@ -329,7 +363,7 @@ Status RangeReader< T >::RankwiseReadSSTs(
   work_items.resize(ranks.size());
   query_results.resize(match.TotalMass());
 
-  logf(LOG_INFO, "Matching ranks: %zu\n", ranks.size());
+  logv(__LOG_ARGS__, LOG_INFO, "Matching ranks: %zu\n", ranks.size());
 
   for (uint32_t i = 0; i < ranks.size(); i++) {
     int rank = ranks[i];
@@ -369,7 +403,7 @@ void RangeReader< T >::ReadBlock(int rank, uint64_t offset, uint64_t size,
   req.scratch = &scratch[0];
   s = fdcache_.Read(rank, req);
   if (!s.ok()) {
-    logf(LOG_ERRO, "Bad Status");
+    logv(__LOG_ARGS__, LOG_ERRO, "Bad Status");
     return;
   }
 

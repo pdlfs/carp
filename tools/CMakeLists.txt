@@ -8,6 +8,8 @@ function(dotool program)
     target_link_libraries(${program} PRIVATE carp ${ARGN})
     target_include_directories(${program} PRIVATE
      "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include;${CMAKE_SOURCE_DIR}/src>")
+
+   install(TARGETS ${program} DESTINATION bin)
 endfunction()
 
 

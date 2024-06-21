@@ -15,7 +15,7 @@
 #define LOG(lvl, fmt, ...)                 \
   do {                                     \
     if (rank_ == 0) {                      \
-      logf(lvl, fmt VA_ARGS(__VA_ARGS__)); \
+      logv(__LOG_ARGS__, lvl, fmt VA_ARGS(__VA_ARGS__)); \
     }                                      \
   } while (0)
 

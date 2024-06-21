@@ -18,10 +18,10 @@ void CompactorLogger::PrintStats() {
 
   float time_sec = time_total * 1e-6;
 
-  logf(LOG_INFO, "[Compactor] Memory Used: %.1fMB",
+  logv(__LOG_ARGS__, LOG_INFO, "[Compactor] Memory Used: %.1fMB",
        Compactor::kMemMax / (1024.0 * 1024.0));
 
-  logf(LOG_INFO, "[Compactor] Total time taken: %.2f s (%.3f s/epoch)",
+  logv(__LOG_ARGS__, LOG_INFO, "[Compactor] Total time taken: %.2f s (%.3f s/epoch)",
        time_sec, time_sec / num_epochs);
 }
 
@@ -42,7 +42,7 @@ Status Compactor::MergeAll() {
 #define EXISTS(map, epoch) ((map).find(epoch) != (map).end())
 
   for (int epoch = 0; EXISTS(run_map, epoch); epoch++) {
-    logf(LOG_INFO, "currently sorting: epoch %d\n", epoch);
+    logv(__LOG_ARGS__, LOG_INFO, "currently sorting: epoch %d\n", epoch);
     logger_.MarkEpochBegin();
 
     std::vector<PartitionedRun>& runs = run_map[epoch];
@@ -55,7 +55,7 @@ Status Compactor::MergeAll() {
         PartitionManifestItem& item = run.items[ri];
         sorter.AddManifestItem(item);
       }
-      logf(LOG_DBUG, "Sorting until: %f\n", run.partition_point);
+      logv(__LOG_ARGS__, LOG_DBUG, "Sorting until: %f\n", run.partition_point);
       sorter.FlushUntil(run.partition_point);
     }
 
@@ -89,7 +89,7 @@ Status Compactor::MergeEpoch(int epoch) {
 
 #define EXISTS(map, epoch) ((map).find(epoch) != (map).end())
 
-  logf(LOG_INFO, "currently sorting: epoch %d\n", epoch);
+  logv(__LOG_ARGS__, LOG_INFO, "currently sorting: epoch %d\n", epoch);
   logger_.MarkEpochBegin();
 
   std::vector<PartitionedRun>& runs = run_map[epoch];
@@ -104,7 +104,7 @@ Status Compactor::MergeEpoch(int epoch) {
       PartitionManifestItem& item = run.items[ri];
       sorter.AddManifestItem(item);
     }
-    logf(LOG_DBUG, "Sorting until: %f\n", run.partition_point);
+    logv(__LOG_ARGS__, LOG_DBUG, "Sorting until: %f\n", run.partition_point);
     sorter.FlushUntil(run.partition_point);
   }
 

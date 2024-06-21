@@ -25,7 +25,7 @@ Status ReaderBase::ReadManifests() {
     s = manifest_reader_.ReadManifest(rank, pf.manifest_data, pf.manifest_sz);
     if (!s.ok()) return s;
 
-    logf(LOG_DBUG, "[MFREAD] Rank %d, items: %" PRIu64 " (epochs: %u)\n", rank,
+    logv(__LOG_ARGS__, LOG_DBUG, "[MFREAD] Rank %d, items: %" PRIu64 " (epochs: %u)\n", rank,
          pf.manifest_sz, pf.num_epochs);
   }
 

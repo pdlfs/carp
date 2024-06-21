@@ -19,7 +19,8 @@ Status QueryUtils::SummarizeManifest(PartitionManifest& manifest) {
   s = manifest.GetEpochCount(epcnt);
   if (!s.ok()) return s;
 
-  logf(LOG_INFO, "Total Epochs: %d\n", epcnt);
+  logv(__LOG_ARGS__, LOG_INFO, "Summarizing manifest:");
+  logv(__LOG_ARGS__, LOG_INFO, "- Total Epochs: %d\n", epcnt);
 
   for (int ep = 0; ep < epcnt; ep++) {
     Range ep_range;
@@ -32,7 +33,7 @@ Status QueryUtils::SummarizeManifest(PartitionManifest& manifest) {
 
     if (ep_itemcnt == 0u) continue;
 
-    logf(LOG_INFO, "Epoch %d: %.1f to %.1f (%" PRIu64 " items)", ep,
+    logv(__LOG_ARGS__, LOG_INFO, "- Epoch %d: %.1f to %.1f (%" PRIu64 " items)", ep,
          ep_range.range_min, ep_range.range_max, ep_itemcnt);
 
     std::string print_buf_concat;
@@ -40,20 +41,8 @@ Status QueryUtils::SummarizeManifest(PartitionManifest& manifest) {
       PartitionManifestMatch match;
       manifest.GetOverlappingEntries(ep, qpnt, match);
 
-      char print_buf[64];
-      snprintf(print_buf, 64, "%.3f (%.3f%%), ", qpnt,
-               match.GetSelectivity() * 100);
-
-      print_buf_concat += print_buf;
-      if (print_buf_concat.size() > 60u) {
-        logf(LOG_INFO, "%s", print_buf_concat.c_str());
-        print_buf_concat = "";
-      }
-    }
-
-    if (print_buf_concat.size()) {
-      logf(LOG_INFO, "%s", print_buf_concat.c_str());
-      print_buf_concat = "";
+      logv(__LOG_ARGS__, LOG_INFO, "\t - Selectivity for key %.4f: %.3f%%", qpnt,
+           match.GetSelectivity() * 100);
     }
   }
 
@@ -86,7 +75,7 @@ Status QueryUtils::GenQueryPlan(PartitionManifest& manifest,
 
 template <>
 void QueryUtils::ThreadSafetyWarning<SequentialFile>() {
-  logf(LOG_WARN,
+  logv(__LOG_ARGS__, LOG_WARN,
        "FileCache/SequentialFile is not thread-safe when intra-rank "
        "parallelism is used!");
 }
@@ -127,7 +116,7 @@ void QueryUtils::SSTReadWorker(void* arg) {
 
   s = wi->fdcache->Read(rank, req, /* force-reopen */ false);
   if (!s.ok()) {
-    logf(LOG_ERRO, "Read Failure");
+    logv(__LOG_ARGS__, LOG_ERRO, "Read Failure");
     return;
   }
 
@@ -188,7 +177,7 @@ void QueryUtils::RankwiseSSTReadWorker(void* arg) {
 
   s = wi->fdcache->ReadBatch(rank, req_vec);
   if (!s.ok()) {
-    logf(LOG_ERRO, "Read Failure");
+    logv(__LOG_ARGS__, LOG_ERRO, "Read Failure");
     return;
   }
 

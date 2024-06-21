@@ -18,6 +18,8 @@ namespace pdlfs {
 namespace plfsio {
 template <typename T>
 Status CachingDirReader<T>::ReadDirectory(std::string dir, int& num_ranks) {
+  logv(__LOG_ARGS__, LOG_INFO, "Reading directory: %s\n", dir.c_str());
+
   dir_ = dir;
   uint64_t fsz;
 
@@ -29,7 +31,7 @@ Status CachingDirReader<T>::ReadDirectory(std::string dir, int& num_ranks) {
     Status s = env_->GetFileSize(fname.c_str(), &fsz);
     if (!s.ok()) continue;
 
-    logf(LOG_DBUG, "File: %s, size: %u\n", fname.c_str(), fsz);
+    logv(__LOG_ARGS__, LOG_DBUG, "File: %s, size: %u\n", fname.c_str(), fsz);
 
     if (!s.ok()) continue;
 
@@ -37,7 +39,7 @@ Status CachingDirReader<T>::ReadDirectory(std::string dir, int& num_ranks) {
     cache_[rank] = fe;
   }
 
-  logf(LOG_INFO, "%u files found.\n", cache_.size());
+  logv(__LOG_ARGS__, LOG_INFO, "%u rdb files found.\n", cache_.size());
   num_ranks = cache_.size();
   num_ranks_ = num_ranks;
 
@@ -68,15 +70,15 @@ Status CachingDirReader<T>::ReadFooter(int rank, ParsedFooter& parsed_footer,
   parsed_footer.key_sz = DecodeFixed64(&req.slice[opt_mfsz + 12]);
   parsed_footer.val_sz = DecodeFixed64(&req.slice[opt_mfsz + 20]);
 
-  logf(LOG_DBG2, "Optimistic Read: %llu, Actual Size: %llu\n", opt_rdsz,
+  logv(__LOG_ARGS__, LOG_DBG2, "Optimistic Read: %llu, Actual Size: %llu\n", opt_rdsz,
        parsed_footer.manifest_sz);
 
   ParsedFooter& pf = parsed_footer;
-  logf(LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs, pf.manifest_sz,
+  logv(__LOG_ARGS__, LOG_DBUG, "Footer: %u %llu %llu %llu\n", pf.num_epochs, pf.manifest_sz,
        pf.key_sz, pf.val_sz);
 
   if (opt_mfsz < pf.manifest_sz) {
-    logf(LOG_DBG2, "Optimistic reading insufficient. Reading again.");
+    logv(__LOG_ARGS__, LOG_DBG2, "Optimistic reading insufficient. Reading again.");
   } else {
     parsed_footer.manifest_data = req.slice;
     parsed_footer.manifest_data.remove_prefix(opt_mfsz -
@@ -177,7 +179,7 @@ Status CachingDirReader<RandomAccessFile>::GetFileHandle(int rank,
   bool is_open = cache_[rank].is_open;
 
   if (force_reopen && first_warn_) {
-    logf(LOG_WARN, "RandomAccessFile: force-reopen set, ignoring!");
+    logv(__LOG_ARGS__, LOG_DBUG, "RandomAccessFile: force-reopen set, ignoring!");
     first_warn_ = false;
   }
 

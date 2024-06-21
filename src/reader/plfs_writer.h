@@ -4,12 +4,15 @@
 
 #pragma once
 
+#include "reader/plfs_wrapper.h"
+#include <pdlfs-common/status.h>
+
 namespace pdlfs {
 namespace plfsio {
 
-class PlfsWriter {
+class PlfsWriterWrapper {
  public:
-  PlfsWriter()
+  PlfsWriterWrapper()
       : path_(nullptr),
         rank_(0),
         epoch_(0),

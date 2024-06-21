@@ -69,6 +69,10 @@ struct Query {
  public:
   int epoch;
   Range range;
+  /* Rank is used to limit lookups to only certain ranks' rdbs
+   * It is used by PartitionManifest while computing a match obj
+   * -1 means all ranks are looked up
+   */
   int rank;
 
   Query(int epoch, float rmin, float rmax)

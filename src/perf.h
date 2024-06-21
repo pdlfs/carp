@@ -4,12 +4,18 @@
 
 #pragma once
 
+#include "common.h"
+
 #include <map>
 
-#define MICROS(us) ((us)*1e-3)
+#define MICROS(us) ((us) * 1e-3)
 
 namespace pdlfs {
 namespace plfsio {
+static const char* kPerfEventManifestRead = "manifest_read";
+static const char* kPerfEventSstRead = "sst_read";
+static const char* kPerfEventSstMergeSort = "sst_mergesort";
+
 class RangeReaderPerfLogger {
  public:
   explicit RangeReaderPerfLogger(Env* env) : env_(env){};
@@ -27,12 +33,13 @@ class RangeReaderPerfLogger {
       intvl_total += PrintSingleStat(it->first);
     }
 
-    logf(LOG_INFO, "Event TOTAL: %.2lf ms\n", MICROS(intvl_total));
+    logv(__LOG_ARGS__, LOG_INFO, "Total time: %.2lf ms\n", MICROS(intvl_total));
   }
 
   uint64_t PrintSingleStat(const char* evt_name) {
     uint64_t event_delta_us = GetEventDelta(evt_name);
-    logf(LOG_INFO, "Event %s: %.2lf ms\n", evt_name, MICROS(event_delta_us));
+    logv(__LOG_ARGS__, LOG_INFO, "Time taken for %s: %.2lf ms\n", evt_name,
+         MICROS(event_delta_us));
     return event_delta_us;
   }
 
@@ -40,7 +47,7 @@ class RangeReaderPerfLogger {
                   float qsel_sst, float qsel_key) {
     Status s = Status::OK();
 
-    const char* events[] = {"SSTREAD", "SORT"};
+    const char* events[] = {kPerfEventSstRead, kPerfEventSstMergeSort};
     size_t n_events = sizeof(events) / sizeof(char*);
 
     std::string ts_str;

@@ -27,12 +27,12 @@ class FmtChecker : public ReaderBase {
 
     for (size_t i = 0; i < manifest_.Size(); i++) {
       PartitionManifestItem& item = manifest_[i];
-      printf("%s\n", item.ToString().c_str());
+      logv(__LOG_ARGS__, LOG_DBG2, "%s\n", item.ToString().c_str());
       size_t sst_sz = item.part_item_count * kvp_sz;
 
       if (sst_sz > buf_sz) {
-        logf(LOG_ERRO, "Insufficient buffer size (Reqd: %zu, Have: %zu)\n",
-             sst_sz, buf_sz);
+        logv(__LOG_ARGS__, LOG_ERRO,
+             "Insufficient buffer size (Reqd: %zu, Have: %zu)", sst_sz, buf_sz);
         s = Status::BufferFull("Insufficient buffer");
         return s;
       }
@@ -58,7 +58,7 @@ class FmtChecker : public ReaderBase {
 
     for (uint64_t i = 0; i < item_cnt; i += 1000) {
       if (key_blk[i] < rbeg || key_blk[i] > rend) {
-        logf(LOG_ERRO, "Validation failed!");
+        logv(__LOG_ARGS__, LOG_ERRO, "Validation failed!");
         return false;
       }
     }
@@ -75,7 +75,7 @@ class FmtChecker : public ReaderBase {
 
     for (uint64_t i = 0; i < item_cnt; i += 1000) {
       if (key_blk[i] < rbeg || key_blk[i] > rend) {
-        logf(LOG_DBUG, "key mismatch at %.1f%%: %f (%f to %f)\n",
+        logv(__LOG_ARGS__, LOG_DBUG, "key mismatch at %.1f%%: %f (%f to %f)",
              i * 100.0 / item_cnt, key_blk[i], rbeg, rend);
         break;
       }
