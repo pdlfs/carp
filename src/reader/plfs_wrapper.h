@@ -87,7 +87,7 @@ class PlfsWrapper {
   Status Append(float key, Slice& val) {
     Status s = Status::OK();
     char* key_ptr = (char*)(&key);
-    ssize_t n = deltafs_plfsdir_append(plfshdl_, key_ptr, epoch_, val.data(),
+    ssize_t n = deltafs_plfsdir_put(plfshdl_, key_ptr, sizeof(float), epoch_, val.data(),
                                        val.size());
     if (n != val.size()) {
       s = Status::IOError("plfsdir write failed");
