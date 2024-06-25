@@ -2,20 +2,20 @@
 # build simple single file tools
 #
 
-function(dotool program)
+function(dotool program exe)
     message(STATUS "Adding tool executable: ${program}")
-    add_executable(${program} ${program}_runner.cc)
-    target_link_libraries(${program} PRIVATE carp ${ARGN})
-    target_include_directories(${program} PRIVATE
+    add_executable(${exe} ${program}_runner.cc)
+    target_link_libraries(${exe} PRIVATE carp ${ARGN})
+    target_include_directories(${exe} PRIVATE
      "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include;${CMAKE_SOURCE_DIR}/src>")
 
-   install(TARGETS ${program} DESTINATION bin)
+   install(TARGETS ${exe} DESTINATION bin)
 endfunction()
 
 
-dotool(compactor)
-dotool(fmtcheck)
-dotool(rangereader)
+dotool(compactor compactor)
+dotool(fmtcheck fmtcheck)
+dotool(rangereader range-reader)
 if(CARP_H5PART)
     dotool(vpicwriter H5PART)
 endif()
