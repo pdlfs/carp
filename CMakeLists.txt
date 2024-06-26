@@ -106,4 +106,5 @@ add_subdirectory(benchmarks)
 
 if(CARP_BUILD_VPIC_DECKS)
   add_subdirectory(decks)
+  install(FILES scripts/gen_compressed_trace.py DESTINATION scripts)
 endif()
